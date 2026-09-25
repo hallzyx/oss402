@@ -1,0 +1,37 @@
+{
+  "name": "odyssey-auth-conformance",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "odyssey-auth-conformance": "./dist/cli.js"
+  },
+  "files": ["dist", "manifest.json"],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "public": "tsx src/cli.ts --mode public",
+    "full": "tsx src/cli.ts --mode full",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "demo-kit": "workspace:*",
+    "js-yaml": "^4.1.0",
+    "odyssey-auth": "workspace:*",
+    "yaml": "^2.7.1"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  }
+}
