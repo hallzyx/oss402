@@ -1,0 +1,29 @@
+{
+  "name": "oss402",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Machine-native OSS maintainer certification via x402 on Stellar",
+  "packageManager": "pnpm@10.24.0",
+  "scripts": {
+    "build": "pnpm -r --filter=./packages/* --filter=./apps/* build",
+    "pay:certify": "pnpm --filter oss402-api pay:certify",
+    "test:valid": "pnpm --filter demo-valid test",
+    "test:invalid": "pnpm --filter demo-invalid test",
+    "conformance:public:valid": "pnpm --filter odyssey-auth-conformance run public -- --workspace apps/demo-valid",
+    "conformance:public:invalid": "pnpm --filter odyssey-auth-conformance run public -- --workspace apps/demo-invalid",
+    "conformance:full:valid": "pnpm --filter odyssey-auth-conformance run full -- --workspace apps/demo-valid",
+    "conformance:full:invalid": "pnpm --filter odyssey-auth-conformance run full -- --workspace apps/demo-invalid",
+    "demo:valid": "pnpm --filter demo-valid start",
+    "demo:invalid": "pnpm --filter demo-invalid start",
+    "dev:api": "pnpm --filter oss402-api dev",
+    "dev:dashboard": "pnpm --filter dashboard dev",
+    "dev:mcp": "pnpm --filter oss402-mcp start",
+    "pay:certify": "pnpm --filter oss402-api pay:certify"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "sharp"]
+  }
+}
