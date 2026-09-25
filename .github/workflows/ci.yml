@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter odyssey-auth build
+      - run: pnpm --filter demo-kit build
+      - run: pnpm --filter odyssey-auth-conformance build
+      - run: pnpm --filter oss402-client build
+
+      - run: pnpm test:valid
+      - run: pnpm test:invalid
+      - run: pnpm conformance:full:valid
+      - run: pnpm conformance:full:invalid
+        continue-on-error: true

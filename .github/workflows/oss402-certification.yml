@@ -1,0 +1,101 @@
+name: OSS402 Certification
+
+on:
+  workflow_dispatch:
+    inputs:
+      workspace:
+        description: Workspace path (apps/demo-valid or apps/demo-invalid)
+        required: true
+        type: string
+      commit:
+        description: Exact git commit SHA to certify
+        required: true
+        type: string
+      suiteVersion:
+        description: Conformance suite version
+        required: true
+        default: v1
+        type: string
+      certificationRunId:
+        description: OSS402 certification run id
+        required: true
+        type: string
+      callbackUrl:
+        description: Optional callback URL for result POST
+        required: false
+        type: string
+
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm --filter odyssey-auth build && pnpm --filter demo-kit build && pnpm --filter odyssey-auth-conformance build
+
+      - name: Run official conformance suite
+        id: suite
+        run: |
+          set +e
+          pnpm --filter odyssey-auth-conformance run full -- --workspace "${{ inputs.workspace }}" | tee suite-output.txt
+          CODE=${PIPESTATUS[0]}
+          echo "exit_code=$CODE" >> "$GITHUB_OUTPUT"
+          if grep -q '"result": "PASS"' suite-output.txt; then
+            echo "result=PASS" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=FAIL" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Parse totals
+        id: parse
+        run: |
+          PASSED=$(node -e "const fs=require('fs');const t=fs.readFileSync('suite-output.txt','utf8');const m=t.match(/\"passed\":\s*(\d+)/);console.log(m?m[1]:0)")
+          FAILED=$(node -e "const fs=require('fs');const t=fs.readFileSync('suite-output.txt','utf8');const m=t.match(/\"failed\":\s*(\d+)/);console.log(m?m[1]:0)")
+          TOTAL=$(node -e "const fs=require('fs');const t=fs.readFileSync('suite-output.txt','utf8');const m=t.match(/\"total\":\s*(\d+)/);console.log(m?m[1]:0)")
+          CODE=$(node -e "const fs=require('fs');const t=fs.readFileSync('suite-output.txt','utf8');const m=t.match(/\"code\":\s*\"([^\"]+)\"/);console.log(m?m[1]:'')")
+          MSG=$(node -e "const fs=require('fs');const t=fs.readFileSync('suite-output.txt','utf8');const m=t.match(/\"message\":\s*\"([^\"]+)\"/);console.log(m?m[1]:'')")
+          echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "message=$MSG" >> "$GITHUB_OUTPUT"
+
+      - name: Callback OSS402 API
+        if: ${{ inputs.callbackUrl != '' }}
+        env:
+          CALLBACK_URL: ${{ inputs.callbackUrl }}
+        run: |
+          BODY=$(jq -n \
+            --arg result "${{ steps.suite.outputs.result }}" \
+            --argjson passed "${{ steps.parse.outputs.passed }}" \
+            --argjson failed "${{ steps.parse.outputs.failed }}" \
+            --argjson total "${{ steps.parse.outputs.total }}" \
+            --arg code "${{ steps.parse.outputs.code }}" \
+            --arg message "${{ steps.parse.outputs.message }}" \
+            '{result:$result, passed:$passed, failed:$failed, total:$total, report:(if $code=="" then null else {code:$code,message:$message} end)}')
+          curl -sS -X POST "$CALLBACK_URL/api/certifications/${{ inputs.certificationRunId }}/callback" \
+            -H "Content-Type: application/json" \
+            -H "x-oss402-callback-secret: ${{ secrets.OSS402_CALLBACK_SECRET }}" \
+            -d "$BODY"
+
+      - name: Fail job on suite FAIL
+        if: ${{ steps.suite.outputs.result != 'PASS' }}
+        run: exit 1
