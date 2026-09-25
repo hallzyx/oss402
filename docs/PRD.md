@@ -1,395 +1,1440 @@
-# OSS402 — Product Requirements Document
+# PRD — OSS402
 
 **Status:** Hackathon MVP  
-**Target:** Stellar Odyssey Perú 2026  
+**Event:** Stellar Odyssey Perú 2026  
 **Primary Track:** AI Agents & Automated Workflows  
-**MVP Scope:** 2–4 days  
+**Working Name:** OSS402  
+**Demo Library:** `odyssey-auth`  
 **Network:** Stellar Testnet  
-**Payment Model:** Pay-per-job via x402  
-**Settlement Asset:** USDC-compatible test asset  
-**Working Name:** OSS402
+**Payment Protocol:** x402  
+**Payment Model:** Pay-per-certification-run  
+**Repository Strategy:** Single monorepo  
 
 ---
 
-## 1. Product Vision
+# 1. Executive Summary
 
-AI coding agents increasingly consume open-source software while bypassing many of the websites, documentation funnels, sponsorship pages, and commercial surfaces that historically helped sustain maintainers.
+OSS402 is a machine-native certification protocol for open-source software.
 
-Traditional flow:
+The core idea is simple:
 
-```text
-Developer
-   ↓
-Google / Docs
-   ↓
-Open Source Project
-   ↓
-Commercial surface / Sponsors / Paid service
-```
+> **AI agents can pay open-source maintainers for official conformance testing of the exact project build they are working on.**
 
-Agentic flow:
+Open-source code remains free.
 
-```text
-Developer
-   ↓
-AI Coding Agent
-   ↓
-Model knowledge + docs + source code
-   ↓
-Working software
-```
+Documentation remains free.
 
-The OSS project still creates value, but the maintainer can disappear from the economic interaction.
+Stable releases remain free.
 
-OSS402 introduces a machine-native monetization layer where maintainers can offer **optional, paid, maintainer-backed services or artifacts** that an AI agent can discover, economically evaluate, purchase via x402 on Stellar, consume, and continue working without human intervention.
+The maintainer monetizes something that cannot be trivially copied or recreated:
 
-> **Open source stays free. AI agents can pay maintainers when buying official maintainer work is more rational than recreating it themselves.**
+> **their authority to define and execute the official conformance suite for their own library, and to attest that a specific project build passed it.**
 
----
+An AI coding agent can:
 
-## 2. Core Principle
+1. detect that a project uses an OSS dependency,
+2. detect that official maintainer certification is required before production,
+3. discover the certification service,
+4. check the price,
+5. compare it against its autonomous spending policy,
+6. pay via x402 on Stellar,
+7. trigger the official conformance suite,
+8. receive PASS or FAIL,
+9. and, only after PASS, receive a version-bound maintainer attestation on Stellar.
 
-OSS402 must **not** put open-source software behind a paywall.
+The resulting attestation is linked to the exact:
 
-These remain free:
+- repository,
+- commit,
+- workspace,
+- dependency version,
+- conformance suite version,
+- and build/configuration hash.
 
-- Source code
-- Public documentation
-- Stable releases
-- GitHub repositories
-- Normal package installation
-- Community knowledge
-- Public migration guides
-
-Maintainers monetize **additional machine-consumable work**.
-
-Possible paid resources:
-
-- Official compatibility artifacts
-- Priority compatibility builds
-- Backported fixes
-- Migration artifacts
-- Early compatibility releases
-- Signed release artifacts
-- Maintainer-tested patches
-- Specialized compatibility reports
-- Priority security artifacts
-- Official machine-readable support services
-
-For the MVP, implement exactly one monetizable resource:
-
-> **Official Compatibility Artifact**
+A README badge may then point to the public verification page.
 
 ---
 
-## 3. MVP Story
+# 2. Product Thesis
 
-Create a fictional but functional open-source package:
+AI agents increasingly consume open-source software while bypassing many of the economic surfaces that traditionally supported maintainers.
+
+OSS402 does **not** attempt to charge agents for:
+
+- source code,
+- docs,
+- package installation,
+- public knowledge,
+- or answers an advanced model can derive itself.
+
+Instead, OSS402 monetizes:
+
+> **Official maintainer-backed conformance testing.**
+
+The value is not:
+
+> “the AI cannot test this itself.”
+
+The value is:
+
+> “the AI cannot truthfully claim that the official maintainer certified this exact project build unless that certification actually happened.”
+
+---
+
+# 3. MVP Goal
+
+The MVP must demonstrate one complete end-to-end flow:
 
 ```text
-fastjson-x
+AI Agent
+   ↓
+detects odyssey-auth
+   ↓
+reads project OSS402 policy
+   ↓
+discovers official certification
+   ↓
+pays certification run via x402
+   ↓
+official conformance suite executes
+   ↓
+PASS or FAIL
+   ↓
+if PASS:
+maintainer attestation written to Stellar
+   ↓
+README badge / verification page
 ```
 
-Current public release:
+The MVP must use:
+
+- one OSS library,
+- one reusable conformance suite,
+- two demo applications,
+- one agent skill,
+- one MCP server,
+- one x402 payment flow,
+- one GitHub Actions certification workflow,
+- one Stellar attestation mechanism,
+- one simple verification UI.
+
+---
+
+# 4. Non-Goals
+
+Do **not** build the following during the hackathon:
+
+- a generic npm marketplace,
+- hundreds of OSS integrations,
+- a GitHub clone,
+- subscriptions,
+- NFT certificates,
+- tokenomics,
+- DAOs,
+- a sponsorship platform,
+- a paid documentation platform,
+- confidential computing / TEE,
+- a production enterprise security platform,
+- GitLab/Bitbucket support,
+- universal CI support,
+- arbitrary certification for any npm package,
+- a complex licensing system,
+- mainnet-first deployment,
+- multi-chain support.
+
+The MVP exists to prove the protocol.
+
+---
+
+# 5. Core Demo Library — `odyssey-auth`
+
+Create a fictional but functional open-source authentication library:
 
 ```text
-fastjson-x v2.0
+odyssey-auth
 ```
 
-An example application uses:
+Its purpose is to provide enough meaningful behavior for an official conformance suite.
+
+Suggested capabilities:
+
+- authentication middleware,
+- token validation,
+- token expiry checks,
+- role-based authorization,
+- protected routes,
+- admin-only routes,
+- malformed token rejection.
+
+Example API:
+
+```ts
+import { odysseyAuth } from "odyssey-auth";
+
+const auth = odysseyAuth({
+  issuer: "oss402-demo",
+  rejectExpiredTokens: true,
+  enforceRoles: true
+});
+```
+
+The implementation does not need to be production-grade security software.
+
+It only needs to be realistic enough to make conformance testing understandable.
+
+---
+
+# 6. Two Demo Applications
+
+The monorepo must contain **two nearly identical applications**.
+
+This is intentional.
+
+The goal is to make the demo deterministic and reproducible without manually breaking/fixing code during the presentation.
+
+## 6.1 `demo-valid`
+
+Correctly configured.
+
+Example:
+
+```ts
+odysseyAuth({
+  issuer: "oss402-demo",
+  rejectExpiredTokens: true,
+  enforceRoles: true
+});
+```
+
+Expected official certification result:
 
 ```text
-Node.js 28
-fastjson-x v2.0
+PASS
 ```
 
-There is intentionally a compatibility issue.
+## 6.2 `demo-invalid`
 
-Example failing test:
+Nearly identical to `demo-valid`, but with one deliberate integration/configuration error.
+
+Example:
+
+```ts
+odysseyAuth({
+  issuer: "oss402-demo",
+
+  // Intentionally wrong for the demo.
+  rejectExpiredTokens: false,
+
+  enforceRoles: true
+});
+```
+
+Normal application tests should still pass.
+
+Example:
+
+```text
+Unit tests        PASS
+Build             PASS
+Lint              PASS
+```
+
+But the official `odyssey-auth` conformance suite must detect the issue.
+
+Expected result:
 
 ```text
 FAIL
 
-fastjson-x v2.0 is incompatible
-with Node.js 28 serialization behavior.
+AUTH-017:
+Expired token was accepted.
 ```
 
-The AI coding agent investigates and discovers two paths.
+This demonstrates:
 
-### Option A — Solve independently
+> Payment does not buy a certificate.
+
+It buys a certification run.
+
+---
+
+# 7. Why Two Apps Matter
+
+Both demo apps must:
+
+- live in the same monorepo,
+- use the same `odyssey-auth` package,
+- use the same conformance suite,
+- use the same workflow,
+- use the same certification endpoint.
+
+The only meaningful difference is the integration/configuration.
+
+Expected outcome:
 
 ```text
-Implement compatibility patch manually
-
-Estimated effort:
-~15–20 minutes
-
-Expected compute/tool cost:
-Higher than purchasing official artifact
-
-Risk:
-Medium
-
-Requires:
-- source inspection
-- patch generation
-- testing
-- debugging
+apps/demo-invalid → FAIL
+apps/demo-valid   → PASS
 ```
 
-### Option B — Buy official maintainer artifact
+This proves that the suite is evaluating the project rather than returning a hardcoded success result.
 
-OSS402 exposes:
+---
+
+# 8. Repository Structure
+
+Use a single monorepo.
+
+Suggested structure:
 
 ```text
-Official Node.js 28 Compatibility Artifact
+oss402/
+│
+├── apps/
+│   ├── demo-valid/
+│   │   ├── src/
+│   │   ├── oss402.yml
+│   │   └── README.md
+│   │
+│   ├── demo-invalid/
+│   │   ├── src/
+│   │   ├── oss402.yml
+│   │   └── README.md
+│   │
+│   ├── oss402-api/
+│   │   └── x402 + certification orchestration
+│   │
+│   └── dashboard/
+│       └── verification + maintainer revenue UI
+│
+├── packages/
+│   ├── odyssey-auth/
+│   │   └── OSS demo library
+│   │
+│   ├── odyssey-auth-conformance/
+│   │   ├── manifest.json
+│   │   ├── public-tests/
+│   │   ├── private-tests/
+│   │   ├── generators/
+│   │   └── runner/
+│   │
+│   ├── oss402-client/
+│   │
+│   └── oss402-mcp/
+│
+├── contracts/
+│   └── oss402-attestation/
+│
+├── .github/
+│   └── workflows/
+│       └── oss402-certification.yml
+│
+├── .agents/
+│   └── skills/
+│       └── oss402-certification/
+│           └── SKILL.md
+│
+├── demo/
+│   ├── DEMO_SCRIPT.md
+│   └── expected-results/
+│
+├── AGENTS.md
+├── README.md
+├── package.json
+└── pnpm-workspace.yaml
+```
 
-Maintainer:
-FastJSON Maintainers
+Use `pnpm` workspaces unless there is a strong technical reason not to.
+
+---
+
+# 9. Conformance Suite
+
+The official maintainer suite is the core value-producing resource.
+
+The suite should be:
+
+> **Static in specification, dynamic in execution.**
+
+The maintainer defines once what correct use of `odyssey-auth` means.
+
+The same specification must then be reusable across multiple consuming projects.
+
+---
+
+# 10. Conformance Categories
+
+For the MVP, include approximately:
+
+```text
+10 public tests
+15 private/dynamic tests
+5 generated/fuzz/security cases
+```
+
+Total target:
+
+```text
+~30 checks
+```
+
+The exact number is not important.
+
+The important point is that the suite feels meaningfully stronger than the consuming application's normal tests.
+
+Suggested checks:
+
+### Authentication
+
+- valid token accepted,
+- missing token rejected,
+- malformed token rejected,
+- expired token rejected,
+- modified signature rejected.
+
+### Authorization
+
+- `user` can access user route,
+- `user` cannot access admin route,
+- `admin` can access admin route.
+
+### Configuration
+
+- insecure options rejected in production mode,
+- required issuer is configured,
+- expected middleware is active.
+
+### Runtime behavior
+
+- malformed auth input does not crash the app,
+- logout/session invalidation works,
+- protected resource rejects invalid auth state.
+
+### Dynamic / generated checks
+
+- mutate valid tokens,
+- generate expired tokens,
+- generate malformed claims,
+- vary role combinations,
+- vary request ordering.
+
+---
+
+# 11. Project Adapter Contract
+
+The suite must not depend on one fixed project architecture.
+
+Each consuming app must include:
+
+```text
+oss402.yml
+```
+
+Example:
+
+```yaml
+project:
+  id: demo-valid
+
+runtime:
+  install: pnpm install --frozen-lockfile
+  build: pnpm build
+  start: pnpm start
+  port: 3000
+
+dependency:
+  name: odyssey-auth
+  version: 1.0.0
+
+conformance:
+  baseUrl: http://localhost:3000
+
+  mappings:
+    login: /api/login
+    protected: /api/profile
+    admin: /api/admin
+```
+
+The conformance runner uses these mappings instead of assuming route names.
+
+This is the core mechanism that makes the suite reusable.
+
+---
+
+# 12. Agent Trigger
+
+Do not rely on the model “remembering” that certification exists.
+
+The trigger must be explicit.
+
+Each demo project must include policy in `oss402.yml`.
+
+Example:
+
+```yaml
+project:
+  id: demo-valid
+
+environment:
+  target: production
+
+certification:
+  requiredFor:
+    - production
+
+dependencies:
+  odyssey-auth:
+    certification: required
+
+agent:
+  totalBudgetUSDC: 1.00
+  maxAutonomousPurchaseUSDC: 0.10
+```
+
+The intended agent flow is:
+
+```text
+User says:
+"Leave this project ready for production."
+
+            ↓
+
+Agent reads oss402.yml
+
+            ↓
+
+Production requires:
+odyssey-auth official conformance
+
+            ↓
+
+Current commit has no valid attestation
+
+            ↓
+
+Discover certification service
+```
+
+---
+
+# 13. Agent Skill
+
+Create:
+
+```text
+.agents/skills/oss402-certification/SKILL.md
+```
+
+The skill teaches the coding agent how to use OSS402.
+
+It must not contain a hardcoded instruction to always purchase certification.
+
+It must explain the protocol.
+
+Suggested contents:
+
+```md
+# OSS402 Certification Skill
+
+Use this workflow when a project declares an OSS402
+certification requirement.
+
+1. Finish normal implementation work.
+2. Run the project's own tests.
+3. Read oss402.yml.
+4. Detect whether the target environment requires official conformance.
+5. Detect whether a valid attestation already exists for the current workspace/commit.
+6. Discover available maintainer certification services.
+7. Inspect price, suite version and dependency compatibility.
+8. Check the project's autonomous procurement policy.
+9. If the certification is required and the price is within policy,
+   purchase the certification run.
+10. Never interpret payment as proof of certification.
+11. Wait for PASS or FAIL.
+12. On FAIL:
+    - read the conformance report,
+    - explain the problem,
+    - propose or implement a fix when allowed.
+13. On PASS:
+    - verify the attestation,
+    - offer to add/update the README badge.
+14. Never claim a different commit/workspace is certified.
+```
+
+---
+
+# 14. MCP Server
+
+Create a minimal OSS402 MCP server.
+
+Required tools:
+
+```text
+oss402_discover
+oss402_inspect
+oss402_purchase_certification
+oss402_certification_status
+oss402_verify_attestation
+```
+
+---
+
+# 15. MCP Tool — `oss402_discover`
+
+Purpose:
+
+Discover official maintainer certification services for a dependency.
+
+Input:
+
+```json
+{
+  "dependency": "odyssey-auth",
+  "version": "1.0.0"
+}
+```
+
+Output:
+
+```json
+{
+  "services": [
+    {
+      "id": "odyssey-auth-conformance-v1",
+      "type": "official_conformance",
+      "maintainer": "Odyssey Auth Maintainers",
+      "price": {
+        "amount": "0.05",
+        "currency": "USDC"
+      },
+      "network": "stellar-testnet"
+    }
+  ]
+}
+```
+
+---
+
+# 16. MCP Tool — `oss402_inspect`
+
+Input:
+
+```json
+{
+  "serviceId": "odyssey-auth-conformance-v1"
+}
+```
+
+Output:
+
+```json
+{
+  "dependency": "odyssey-auth@1.0.0",
+  "suite": "v1",
+  "official": true,
+  "price": "0.05 USDC",
+  "resultType": "PASS_FAIL",
+  "attestationOnPass": true
+}
+```
+
+---
+
+# 17. MCP Tool — `oss402_purchase_certification`
+
+Input:
+
+```json
+{
+  "serviceId": "odyssey-auth-conformance-v1",
+  "workspace": "apps/demo-valid",
+  "commit": "CURRENT_GIT_SHA"
+}
+```
+
+Behavior:
+
+1. Call protected certification endpoint.
+2. Receive HTTP 402.
+3. Complete Stellar x402 payment.
+4. Retry request with payment proof.
+5. Receive certification run identifier.
+6. Trigger certification workflow.
+
+Output:
+
+```json
+{
+  "success": true,
+  "paid": "0.05 USDC",
+  "runId": "cert_182",
+  "transactionHash": "..."
+}
+```
+
+---
+
+# 18. MCP Tool — `oss402_certification_status`
+
+Input:
+
+```json
+{
+  "runId": "cert_182"
+}
+```
+
+Possible output:
+
+```json
+{
+  "status": "running"
+}
+```
+
+or:
+
+```json
+{
+  "status": "failed",
+  "passed": 29,
+  "failed": 1,
+  "report": {
+    "code": "AUTH-017",
+    "message": "Expired token was accepted."
+  }
+}
+```
+
+or:
+
+```json
+{
+  "status": "passed",
+  "passed": 30,
+  "failed": 0,
+  "attestationId": "att_..."
+}
+```
+
+---
+
+# 19. MCP Tool — `oss402_verify_attestation`
+
+Input:
+
+```json
+{
+  "attestationId": "att_..."
+}
+```
+
+Output:
+
+```json
+{
+  "valid": true,
+  "project": "demo-valid",
+  "workspace": "apps/demo-valid",
+  "commit": "...",
+  "dependency": "odyssey-auth@1.0.0",
+  "suite": "v1",
+  "issuer": "G...",
+  "result": "PASS"
+}
+```
+
+---
+
+# 20. x402 Protected Endpoint
+
+Example:
+
+```http
+POST /api/certifications/odyssey-auth/v1
+```
+
+Request:
+
+```json
+{
+  "repository": "github.com/example/oss402",
+  "commit": "812fac...",
+  "workspace": "apps/demo-valid",
+  "dependency": "odyssey-auth@1.0.0"
+}
+```
+
+Without valid payment:
+
+```http
+HTTP/1.1 402 Payment Required
+```
 
 Price:
+
+```text
 0.05 USDC
-
-Includes:
-- compatibility.patch
-- manifest.json
-- compatibility-report.md
-- maintainer-backed artifact metadata
-
-Expected result:
-Node.js 28 compatibility
 ```
 
-The agent reasons:
+After valid x402 payment:
 
-```text
-Official artifact: $0.05
-Self-solving requires more time, compute and uncertainty.
-
-Decision:
-BUY
+```http
+HTTP/1.1 200 OK
 ```
 
-The agent pays through Stellar x402, the artifact is unlocked, the agent applies it, and the tests pass:
+Response:
 
-```text
-42 passed
-0 failed
+```json
+{
+  "runId": "cert_182",
+  "status": "queued"
+}
 ```
 
-Maintainer dashboard:
+Payment must be real on Stellar Testnet.
+
+Do not simulate this step.
+
+---
+
+# 21. Certification Is Pay-Per-Run
+
+The economic primitive is:
+
+> **Certification attempt**
+
+Not:
+
+> Certificate purchase
+
+Therefore:
 
 ```text
-AI purchases: 1
-Revenue: +0.05 USDC
+payment
+   ↓
+test execution
+   ↓
+PASS or FAIL
+```
+
+A failed run is still charged because compute, infrastructure, and maintainer-owned testing work were consumed.
+
+For the demo, if repeated payments create too much operational friction, a single paid run may include one retry.
+
+If implementing retries, make this explicit:
+
+```text
+0.05 USDC
+includes:
+- initial certification attempt
+- 1 remediation retry
+```
+
+Do not hide this behavior.
+
+---
+
+# 22. GitHub Actions Runner
+
+Use GitHub Actions for the MVP.
+
+The workflow must receive at minimum:
+
+```text
+workspace
+commit
+suiteVersion
+certificationRunId
+```
+
+Suggested workflow:
+
+```text
+Checkout exact commit
+        ↓
+Select workspace
+        ↓
+Install dependencies
+        ↓
+Build application
+        ↓
+Start application
+        ↓
+Load official conformance suite
+        ↓
+Run public tests
+        ↓
+Run private/dynamic tests
+        ↓
+Generate signed/evidenced result
+        ↓
+Return PASS / FAIL to OSS402
+```
+
+Example visible output:
+
+```text
+OSS402 Certification #182
+
+Target:
+apps/demo-invalid
+
+Commit:
+812fac...
+
+Dependency:
+odyssey-auth@1.0.0
+
+Suite:
+Odyssey Auth Conformance v1
+
+Public tests:
+10 / 10
+
+Private tests:
+14 / 15
+
+Generated tests:
+5 / 5
+
+TOTAL:
+29 / 30
+
+FAIL
+
+AUTH-017:
+Expired token was accepted.
 ```
 
 ---
 
-## 4. Core Wow Moment
+# 23. Source Code Privacy Model
 
-The primary demo must visibly show:
+The MVP must not require uploading the entire repository to OSS402 servers.
 
-```text
-Tests FAIL
-      ↓
-Agent discovers official fix
-      ↓
-Agent compares:
+The code should execute inside the project's existing CI environment.
 
-BUILD MYSELF
-vs
-BUY FOR $0.05
-
-      ↓
-Agent decides BUY
-      ↓
-HTTP 402 Payment Required
-      ↓
-0.05 USDC settled on Stellar
-      ↓
-Artifact unlocked
-      ↓
-Agent applies artifact
-      ↓
-Tests PASS
-      ↓
-Maintainer receives payment
-```
-
-The user must **not** manually click a Buy button during the main flow.
-
-The agent itself must decide that buying is economically preferable.
-
----
-
-## 5. Personas
-
-### 5.1 OSS Maintainer
-
-Goals:
-
-- Keep core OSS freely available
-- Monetize high-value maintenance work
-- Receive direct USDC payments
-- Offer machine-readable services
-- Avoid building a full SaaS billing stack
-
-Can publish resources such as compatibility artifacts, priority builds, backports, migration packs, or signed releases.
-
-### 5.2 AI Coding Agent
-
-Examples: Codex, Claude Code, OpenCode, other MCP-capable agents.
-
-Responsibilities:
-
-1. Detect a software problem.
-2. Investigate normal free options first.
-3. Discover OSS402 services.
-4. Inspect price and expected value.
-5. Estimate self-solving effort/cost/risk.
-6. Compare both options.
-7. Check spending policy.
-8. Purchase if rational.
-9. Consume artifact.
-10. Continue coding autonomously.
-
-### 5.3 Developer
-
-Provides the agent with a spending policy.
+For the MVP:
 
 ```text
-Session budget:
-1.00 USDC
-
-Maximum autonomous purchase:
-0.10 USDC
-
-Allowed:
-✓ OSS maintainer services
-✓ Compatibility artifacts
-✓ Migration artifacts
-
-Approval required:
-> 0.10 USDC
+GitHub-hosted runner
 ```
 
-For the MVP, the developer should not approve the 0.05 USDC purchase manually.
-
----
-
-## 6. Economic Decision Model
-
-The agent explicitly compares two estimated costs.
-
-### Self-solve estimate
-
-Inputs can include:
-
-- Estimated execution time
-- Expected token/compute cost
-- Number of files likely to change
-- Test complexity
-- Regression risk
-- Confidence level
-- Whether an official solution exists
+OSS402 should receive only the certification evidence and metadata required to issue the result.
 
 Example:
 
 ```json
 {
-  "estimated_minutes": 18,
-  "estimated_compute_usd": 0.21,
-  "risk": "medium",
-  "confidence": 0.72
+  "runId": "cert_182",
+  "repository": "github.com/example/oss402",
+  "commit": "812fac...",
+  "workspace": "apps/demo-valid",
+  "dependency": "odyssey-auth@1.0.0",
+  "suite": "v1",
+  "runnerHash": "sha256:...",
+  "result": "PASS",
+  "testsPassed": 30,
+  "testsFailed": 0,
+  "logsHash": "sha256:..."
 }
 ```
 
-### Purchase estimate
+Do not claim this is zero-trust or confidential computing.
+
+For the MVP, GitHub is part of the trusted execution boundary.
+
+---
+
+# 24. Attestation Model
+
+Only issue an attestation after PASS.
+
+Do not use NFT language.
+
+Call it:
+
+> **Maintainer Attestation**
+
+Minimum attestation fields:
+
+```text
+issuer
+repositoryHash
+commit
+workspaceHash
+dependency
+dependencyVersion
+suiteVersion
+configurationHash
+runnerHash
+timestamp
+result
+```
+
+Example logical representation:
 
 ```json
 {
-  "price_usdc": 0.05,
-  "publisher": "FastJSON Maintainers",
-  "official": true,
-  "target_runtime": "Node.js 28",
-  "expected_confidence": 0.98
+  "issuer": "GMAINTAINER...",
+  "repository": "github.com/example/oss402",
+  "commit": "812fac...",
+  "workspace": "apps/demo-valid",
+  "dependency": "odyssey-auth",
+  "dependencyVersion": "1.0.0",
+  "suiteVersion": "v1",
+  "result": "PASS",
+  "timestamp": "2026-09-25T15:00:00Z"
 }
 ```
 
-### MVP decision rule
+Store only hashes/minimal metadata on-chain when appropriate.
+
+Large logs and reports stay off-chain.
+
+---
+
+# 25. Attestation Binding
+
+Because both demo applications live in the same repository and can share the same commit, the attestation must **not** be bound only to:
 
 ```text
-BUY if:
+repository + commit
+```
 
-resource.price <= autonomous_limit
+It must be bound to:
 
-AND
+```text
+repository
++
+commit
++
+workspace path
++
+dependency version
++
+suite version
++
+configuration/build hash
+```
 
-(
-  estimated_self_solve_cost > resource.price
-  OR self_solve_risk >= medium
-  OR official_resource_confidence significantly exceeds self-solve confidence
+This prevents:
+
+```text
+apps/demo-valid
+```
+
+and:
+
+```text
+apps/demo-invalid
+```
+
+from being treated as the same certified subject.
+
+---
+
+# 26. Certification Staleness
+
+A certification applies only to the exact subject that was tested.
+
+If the project changes, the previous certification must not automatically cover the new build.
+
+Example:
+
+```text
+Certified:
+commit 812fac
+
+Current:
+commit 999abc
+```
+
+Verification UI should show:
+
+```text
+⚠ CERTIFICATION STALE
+```
+
+or:
+
+```text
+Certification applies to an older commit.
+```
+
+Do not claim the new commit failed certification.
+
+Only claim that it has not been certified.
+
+---
+
+# 27. README Badge
+
+After PASS, the agent may offer to add a README badge.
+
+Example markdown:
+
+```md
+[![Odyssey Auth Conformant](https://oss402.dev/badge/att_182.svg)](
+  https://oss402.dev/verify/att_182
 )
 ```
 
-The agent should explain its decision briefly in natural language.
+Rendered concept:
+
+```text
+Odyssey Auth ✓ Maintainer Conformant
+```
+
+The badge must link to the verification page.
 
 ---
 
-## 7. High-Level Architecture
+# 28. Agent Behavior After PASS
+
+The agent should say something conceptually similar to:
 
 ```text
-┌──────────────────────────┐
-│      Coding Agent        │
-│ Codex / Claude / etc.    │
-└────────────┬─────────────┘
-             │ MCP
-             ▼
-┌──────────────────────────┐
-│        OSS402 MCP        │
-│                          │
-│ discover_services        │
-│ inspect_service          │
-│ purchase_resource        │
-│ wallet_balance           │
-│ check_budget             │
-└────────────┬─────────────┘
-             │ HTTP
-             ▼
-┌──────────────────────────┐
-│       OSS402 Server      │
-│                          │
-│ Project registry         │
-│ Service catalog          │
-│ Protected artifacts      │
-│ Purchase records         │
-└────────────┬─────────────┘
-             │ 402
-             ▼
-┌──────────────────────────┐
-│      Stellar x402        │
-│                          │
-│ USDC authorization       │
-│ Verification             │
-│ Settlement               │
-└────────────┬─────────────┘
-             │
-             ▼
-       Maintainer Wallet
+Official Odyssey Auth Conformance v1 passed.
+
+Certified workspace:
+apps/demo-valid
+
+Certified commit:
+812fac...
+
+30 / 30 checks passed.
+
+A maintainer attestation was issued on Stellar.
+
+Would you like me to add the verification badge to README.md?
 ```
+
+The badge modification must be opt-in unless repository automation policy explicitly allows it.
 
 ---
 
-## 8. Maintainer Manifest
+# 29. Agent Behavior After FAIL
 
-Each participating OSS project exposes a machine-readable manifest.
-
-Suggested path:
+Expected response:
 
 ```text
-/.well-known/oss402.json
+Official certification failed.
+
+29 / 30 checks passed.
+
+Failure:
+AUTH-017 — Expired token was accepted.
+
+No maintainer attestation was issued.
+
+I can inspect the integration and propose a fix.
 ```
+
+The agent must never claim certification after FAIL.
+
+---
+
+# 30. Dashboard / Verification UI
+
+Keep UI minimal.
+
+## Verification Page
+
+Example:
+
+```text
+ODYSSEY AUTH
+
+✓ MAINTAINER CONFORMANT
+
+Project
+demo-valid
+
+Repository
+github.com/example/oss402
+
+Workspace
+apps/demo-valid
+
+Commit
+812fac...
+
+Dependency
+odyssey-auth@1.0.0
+
+Suite
+Odyssey Auth Conformance v1
+
+Result
+30 / 30 PASS
+
+Issuer
+Odyssey Auth Maintainers
+
+Stellar Attestation
+G... / transaction...
+```
+
+## Maintainer Dashboard
+
+Example:
+
+```text
+ODYSSEY AUTH
+
+Official Conformance v1
+
+Certification runs
+2
+
+Passed
+1
+
+Failed
+1
+
+Revenue
+0.10 USDC
+```
+
+Do not overbuild charts.
+
+---
+
+# 31. Demo Flow
+
+The hackathon demo should be deterministic.
+
+## Demo A — Invalid Project
+
+Target:
+
+```text
+apps/demo-invalid
+```
+
+Flow:
+
+```text
+Agent detects production requirement
+        ↓
+detects odyssey-auth certification requirement
+        ↓
+discovers official certification
+        ↓
+price = 0.05 USDC
+autonomous limit = 0.10 USDC
+        ↓
+purchases via x402
+        ↓
+GitHub Actions runs conformance suite
+        ↓
+29 / 30
+        ↓
+FAIL
+        ↓
+no attestation
+```
+
+This proves:
+
+- payment does not guarantee approval,
+- the suite catches a real integration issue.
+
+## Demo B — Valid Project
+
+Target:
+
+```text
+apps/demo-valid
+```
+
+Same flow:
+
+```text
+Agent detects requirement
+        ↓
+purchases certification
+        ↓
+same official suite runs
+        ↓
+30 / 30
+        ↓
+PASS
+        ↓
+Maintainer Attestation on Stellar
+        ↓
+README badge suggested
+```
+
+This proves:
+
+- same library,
+- same suite,
+- same workflow,
+- different project state,
+- legitimate PASS.
+
+---
+
+# 32. Reproducible Local Commands
+
+Provide simple commands.
+
+Suggested:
+
+```bash
+pnpm install
+```
+
+Run normal app tests:
+
+```bash
+pnpm test:valid
+pnpm test:invalid
+```
+
+Both should succeed.
+
+Run local public conformance baseline:
+
+```bash
+pnpm conformance:public:valid
+pnpm conformance:public:invalid
+```
+
+Optionally expose full demo helpers:
+
+```bash
+pnpm demo:valid
+pnpm demo:invalid
+```
+
+Actual official certification still requires the paid OSS402 flow.
+
+---
+
+# 33. Important Demo Property
+
+Normal tests should not reveal the deliberately bad integration.
+
+Example:
+
+```text
+demo-invalid
+
+Unit tests    PASS
+Build         PASS
+Lint          PASS
+```
+
+Then official conformance:
+
+```text
+Odyssey Auth Conformance
+
+FAIL
+```
+
+This creates the visual contrast:
+
+> Your tests say the app works.  
+> The maintainer's official suite catches what your project missed.
+
+---
+
+# 34. Suggested Tech Stack
+
+## Monorepo
+
+```text
+pnpm
+TypeScript
+```
+
+## Demo apps
+
+```text
+Node.js
+Fastify or Express
+```
+
+## Library
+
+```text
+TypeScript
+```
+
+## Conformance suite
+
+```text
+Vitest
+Supertest / fetch
+fast-check for lightweight property testing if useful
+```
+
+## API
+
+```text
+Fastify / Express / Next API
+```
+
+## Dashboard
+
+```text
+Next.js
+React
+Tailwind
+shadcn/ui
+```
+
+## Agent integration
+
+```text
+MCP
+Agent Skill
+```
+
+## Payments
+
+```text
+Stellar Testnet
+x402
+USDC-compatible test asset
+```
+
+## Attestation
+
+```text
+Soroban or minimal Stellar-verifiable attestation mechanism
+```
+
+Choose the simplest implementation that produces a verifiable on-chain result.
+
+---
+
+# 35. Security / Integrity Requirements
+
+For MVP:
+
+- exact commit must be recorded,
+- exact workspace must be recorded,
+- suite version must be recorded,
+- dependency version must be recorded,
+- result must be deterministic,
+- attestation only on PASS,
+- FAIL never creates a positive attestation,
+- payment must not imply PASS,
+- README badge must point to verifiable metadata,
+- previous certification must not silently apply to changed code.
+
+---
+
+# 36. Maintainer Manifest
+
+`odyssey-auth` should expose machine-readable OSS402 metadata.
 
 Example:
 
@@ -397,847 +1442,238 @@ Example:
 {
   "schemaVersion": "0.1",
   "project": {
-    "name": "fastjson-x",
-    "repository": "https://github.com/demo/fastjson-x",
-    "package": "fastjson-x"
+    "name": "odyssey-auth",
+    "version": "1.0.0"
   },
   "maintainer": {
-    "name": "FastJSON Maintainers",
+    "name": "Odyssey Auth Maintainers",
     "stellarAddress": "G..."
   },
-  "services": [
+  "certifications": [
     {
-      "id": "node28-compatibility",
-      "type": "compatibility_artifact",
-      "title": "Official Node.js 28 Compatibility Artifact",
-      "description": "Maintainer-tested compatibility patch for fastjson-x v2.0 on Node.js 28.",
+      "id": "odyssey-auth-conformance-v1",
+      "type": "official_conformance",
       "price": {
         "amount": "0.05",
         "currency": "USDC",
         "network": "stellar-testnet"
       },
-      "endpoint": "/api/resources/node28-compatibility",
-      "compatibleWith": {
-        "package": "fastjson-x",
-        "packageVersion": "2.0.0",
-        "runtime": "node",
-        "runtimeVersion": "28"
-      }
+      "endpoint": "/api/certifications/odyssey-auth/v1"
     }
   ]
 }
 ```
 
-Do not over-engineer this schema for the MVP.
+Possible location:
+
+```text
+/.well-known/oss402.json
+```
+
+or package metadata.
+
+For MVP, one approach is enough.
 
 ---
 
-## 9. MCP Tools
+# 37. README Main Message
 
-### `discover_services`
-
-Input:
-
-```json
-{
-  "project": "fastjson-x"
-}
-```
-
-Output:
-
-```json
-{
-  "services": [
-    {
-      "id": "node28-compatibility",
-      "title": "Official Node.js 28 Compatibility Artifact",
-      "price": "0.05 USDC"
-    }
-  ]
-}
-```
-
-### `inspect_service`
-
-```json
-{
-  "serviceId": "node28-compatibility"
-}
-```
-
-Returns price, target versions, artifact type, publisher, and expected outcome.
-
-### `wallet_balance`
-
-```json
-{
-  "balance": "1.00",
-  "currency": "USDC"
-}
-```
-
-### `check_budget`
-
-Input:
-
-```json
-{
-  "amount": "0.05"
-}
-```
-
-Output:
-
-```json
-{
-  "allowed": true,
-  "remainingAfterPurchase": "0.95"
-}
-```
-
-### `purchase_resource`
-
-Input:
-
-```json
-{
-  "serviceId": "node28-compatibility"
-}
-```
-
-Behavior:
-
-1. Request protected resource.
-2. Receive HTTP 402.
-3. Build/sign Stellar x402 payment.
-4. Retry with payment proof.
-5. Receive protected artifact.
-6. Save locally.
-7. Return payment and artifact metadata.
-
-Example output:
-
-```json
-{
-  "success": true,
-  "paid": "0.05 USDC",
-  "transaction": "stellar_tx_hash",
-  "artifactPath": "./.oss402/node28-compatibility/"
-}
-```
-
----
-
-## 10. Protected Resource Endpoint
-
-```http
-GET /api/resources/node28-compatibility
-```
-
-Without payment:
-
-```http
-HTTP/1.1 402 Payment Required
-```
-
-After valid payment:
-
-```http
-HTTP/1.1 200 OK
-```
-
-Example response:
-
-```json
-{
-  "resourceId": "node28-compatibility",
-  "project": "fastjson-x",
-  "version": "1",
-  "artifactUrl": "...",
-  "artifactHash": "...",
-  "maintainer": "G...",
-  "paymentTx": "..."
-}
-```
-
----
-
-## 11. Artifact Structure
+The repository README should explain OSS402 using this progression:
 
 ```text
-fastjson-node28-compat/
-│
-├── compatibility.patch
-├── manifest.json
-└── compatibility-report.md
+Open source remains free.
+        ↓
+Maintainers define official conformance.
+        ↓
+AI agents can purchase a certification run.
+        ↓
+The exact project build is tested.
+        ↓
+PASS produces a maintainer attestation.
 ```
 
-Example `manifest.json`:
+Core line:
 
-```json
-{
-  "project": "fastjson-x",
-  "publicVersion": "2.0.0",
-  "targetEnvironment": {
-    "runtime": "node",
-    "runtimeVersion": "28"
-  },
-  "artifactType": "official_compatibility_patch",
-  "publisher": "FastJSON Maintainers",
-  "artifactHash": "sha256:...",
-  "createdAt": "2026-09-23T00:00:00Z"
-}
-```
+> **Tests tell you that your code works. OSS402 tells you that the maintainer agrees.**
 
----
-
-## 12. Suggested Repository Structure
-
-```text
-oss402/
-│
-├── apps/
-│   ├── maintainer-dashboard/
-│   ├── demo-broken-app/
-│   └── oss402-api/
-│
-├── packages/
-│   ├── fastjson-x/
-│   ├── fastjson-x-node28-artifact/
-│   ├── oss402-mcp/
-│   └── oss402-client/
-│
-├── contracts/
-│   └── optional-budget-policy/
-│
-├── demo/
-│   ├── DEMO_SCRIPT.md
-│   └── prompts/
-│
-└── README.md
-```
-
----
-
-## 13. Maintainer Dashboard
-
-Required:
-
-```text
-OSS402
-
-fastjson-x
-
-Revenue
-0.05 USDC
-
-AI consumers
-1
-
-Services
-
-Node 28 Compatibility Artifact
-0.05 USDC
-1 purchase
-```
-
-Optional:
-
-- Revenue chart
-- Wallet balance
-- Resource popularity
-- Recent transactions
-
-Do not over-invest in analytics during the hackathon.
-
----
-
-## 14. Agent Wallet and Guardrails
-
-Minimum viable policy can live in the MCP layer.
-
-Example:
-
-```json
-{
-  "sessionBudget": 1.0,
-  "maxAutonomousPurchase": 0.1,
-  "allowedCategories": [
-    "compatibility_artifact",
-    "migration_artifact"
-  ]
-}
-```
-
-Purchase below limit:
-
-```text
-Resource: $0.05
-Limit: $0.10
-
-APPROVED
-```
-
-Purchase above limit:
-
-```text
-Resource: $3.00
-Limit: $0.10
-
-DENIED
-
-Reason:
-Autonomous spending limit exceeded.
-Human approval required.
-```
-
-Stretch goal: enforce limits using Stellar smart-account policies.
-
----
-
-## 15. Demo Flow
-
-### Step 1 — Start with broken software
-
-Prompt:
-
-> Fix this project and make all tests pass. You may autonomously purchase official OSS maintainer resources costing up to 0.10 USDC if doing so is more efficient than solving the issue yourself.
-
-Agent runs:
-
-```bash
-npm test
-```
-
-Result:
-
-```text
-41 passed
-1 failed
-```
-
-### Step 2 — Agent investigates
-
-Determines:
-
-```text
-fastjson-x v2.0
-+
-Node.js 28
-=
-compatibility issue
-```
-
-### Step 3 — Discover OSS402 resource
-
-```text
-discover_services("fastjson-x")
-```
-
-Finds:
-
-```text
-Official Node.js 28 Compatibility Artifact
-0.05 USDC
-```
-
-### Step 4 — Economic reasoning
-
-Agent visibly explains:
-
-```text
-I can attempt to reconstruct the compatibility fix manually.
-
-Estimated self-solving cost:
-~$0.20–$0.30 of agent/tool usage
-with moderate compatibility risk.
-
-Official maintainer artifact:
-$0.05 USDC
-within my $0.10 autonomous purchase limit.
-
-Buying is the lower-cost, lower-risk option.
-
-Decision: purchase.
-```
-
-### Step 5 — x402 payment
-
-```text
-GET /api/resources/node28-compatibility
-```
-
-Server:
-
-```text
-402 Payment Required
-```
-
-Agent pays:
-
-```text
-0.05 USDC
-Agent Wallet → Maintainer Wallet
-```
-
-Show Stellar transaction hash.
-
-### Step 6 — Artifact delivery
-
-```text
-200 OK
-```
-
-Artifact is saved locally.
-
-### Step 7 — Apply artifact
-
-```bash
-git apply compatibility.patch
-```
-
-### Step 8 — Tests pass
-
-```text
-42 passed
-0 failed
-```
-
-### Step 9 — Maintainer gets paid
-
-```text
-AI consumers: 1
-Revenue: +0.05 USDC
-```
-
-End demo.
-
----
-
-## 16. Demo Timing
-
-Target: ~90 seconds.
-
-```text
-0:00–0:10
-Explain OSS sustainability problem
-
-0:10–0:20
-Agent runs tests → FAIL
-
-0:20–0:35
-Agent discovers official maintainer resource
-
-0:35–0:50
-Agent compares self-solving vs buying
-
-0:50–1:05
-x402 payment on Stellar
-
-1:05–1:20
-Artifact applied
-
-1:20–1:30
-Tests PASS + maintainer receives revenue
-```
-
----
-
-## 17. Product Positioning
-
-Do **not** pitch:
-
-- “A marketplace for paid open-source packages.”
-- “Paywall for OSS.”
-- “Crypto donations for maintainers.”
-- “Paid documentation.”
-
-Pitch:
-
-> **Machine-native monetization for open-source maintainers.**
-
-Supporting line:
-
-> **AI uses upstream. AI pays upstream.**
-
-Longer explanation:
-
-> OSS402 lets maintainers keep source, docs and stable releases free while exposing optional machine-readable services and artifacts. Coding agents can discover those resources, compare their cost against solving the problem themselves, and autonomously purchase them through x402 on Stellar when buying is the rational choice.
-
----
-
-## 18. Why x402
-
-Traditional checkout:
-
-```text
-Agent
-↓
-Open browser
-↓
-Create account
-↓
-Stripe checkout
-↓
-Card / email / API key
-↓
-Return to task
-```
-
-OSS402:
-
-```text
-Agent
-↓
-HTTP request
-↓
-402
-↓
-USDC payment
-↓
-200
-↓
-continue task
-```
-
-The buyer is a machine, so payment should also be machine-native.
-
----
-
-## 19. Why Stellar
-
-Stellar is used for the actual economic interaction, not decorative storage.
-
-Core responsibilities:
-
-- Machine-native USDC settlement
-- x402 payment flow
-- Direct maintainer payout
-- Low-cost small payments
-- Verifiable payment receipt
-- Future smart-account spending policies
-- Future revenue splitting across upstream maintainers
-
-If Stellar/x402 is removed, the core autonomous machine-purchase flow changes materially.
-
----
-
-## 20. Why Pay-Per-Job
-
-The MVP uses:
-
-> **pay-per-job**
-
-Not:
-
-- Monthly subscription
-- Paid access to source
-- Paid documentation
-- Per-install pricing
-
-Reasons:
-
-1. Agents consume resources opportunistically.
-2. A developer may need a resource only once.
-3. x402 naturally supports request-level payment.
-4. It avoids SaaS subscription fatigue.
-5. Price can be compared directly against agent compute/time cost.
-6. It creates a clear machine-economic decision.
-
-Enterprise subscriptions can be added later.
-
----
-
-## 21. Future Resource Types
-
-### Compatibility
-
-```text
-node28-compatibility
-python314-compatibility
-next18-compatibility
-```
-
-### Migration
-
-```text
-v3-to-v4 migration artifact
-database schema migration
-framework upgrade bundle
-```
-
-### Priority releases
-
-```text
-early compatibility build
-release candidate access
-priority backport
-```
-
-### Security
-
-```text
-maintainer-backed security patch
-early advisory
-signed security artifact
-```
-
-### Official builds
-
-```text
-signed binary
-reproducible build
-SBOM
-compatibility attestation
-```
-
-### Support
-
-```text
-machine-readable support request
-maintainer review
-official diagnosis
-```
-
----
-
-## 22. Future Upstream Revenue Sharing
-
-Not required for MVP.
-
-Future possibility:
-
-```text
-Framework A
-     ↓ depends on
-Library B
-     ↓ depends on
-Library C
-```
-
-A paid operation on Framework A could allocate part of its revenue upstream:
-
-```text
-0.10 USDC
-
-0.07 → Framework A
-0.02 → Library B
-0.01 → Library C
-```
-
-Do not implement this until the core loop is stable.
-
----
-
-## 23. Non-Goals
-
-Do NOT build:
-
-- A replacement for npm
-- A generic package marketplace
-- A GitHub clone
-- A sponsorship platform
-- A paid documentation platform
-- A token for OSS maintainers
-- An NFT system
-- Full dependency revenue sharing
-- Complex DAO governance
-- A production licensing platform
-- Full enterprise billing
-- Mainnet-first deployment
-
-Stay focused on the single agent-purchase loop.
-
----
-
-## 24. MVP Acceptance Criteria
-
-The MVP is successful if:
-
-- [ ] Functional OSS demo package exists
-- [ ] Demo application has an intentional compatibility failure
-- [ ] OSS402 manifest is discoverable
-- [ ] MCP server exposes paid maintainer service
-- [ ] Coding agent can discover the service
-- [ ] Agent can inspect price and metadata
-- [ ] Agent explicitly compares self-solving vs buying
-- [ ] Agent has an autonomous spending limit
-- [ ] Agent chooses to buy without human confirmation
-- [ ] Protected endpoint returns HTTP 402
-- [ ] Agent completes an x402 payment on Stellar Testnet
-- [ ] Maintainer wallet receives payment
-- [ ] Paid resource becomes accessible
-- [ ] Agent downloads resource
-- [ ] Agent applies compatibility artifact
-- [ ] Tests change from FAIL to PASS
-- [ ] Maintainer dashboard reflects purchase
-- [ ] Stellar transaction hash is visible in the demo
-
-If these work reliably, stop adding features and prepare the pitch.
-
----
-
-## 25. Suggested Tech Stack
-
-### Frontend
-
-```text
-Next.js / React
-Tailwind CSS
-shadcn/ui
-```
-
-### Backend
-
-```text
-Node.js
-TypeScript
-Fastify / Express / Next API routes
-```
-
-### Agent Integration
-
-```text
-MCP server
-TypeScript SDK
-```
-
-### Payments
-
-```text
-Stellar Testnet
-x402
-USDC-compatible test asset
-OpenZeppelin/Stellar facilitator where appropriate
-```
-
-### Persistence
-
-```text
-SQLite
-or
-PostgreSQL
-```
-
-Store only project metadata, resource catalog, purchase metadata and transaction hashes.
-
----
-
-## 26. README Narrative
-
-### Problem
-
-AI increasingly consumes OSS while bypassing economic funnels that historically helped sustain maintainers.
-
-### Insight
-
-Do not charge agents for information they can reconstruct from public source and documentation.
-
-Charge for:
-
-> **Maintainer-backed work that is cheaper, faster, safer or more authoritative to buy than recreate.**
-
-### Solution
-
-OSS402 creates machine-readable paid maintainer services.
-
-### Core Example
-
-```text
-Coding Agent
-↓
-dependency problem
-↓
-official fix available
-↓
-compare build vs buy
-↓
-buy wins
-↓
-x402 payment
-↓
-maintainer paid
-↓
-agent continues
-```
-
-### Principle
-
-> **Open source stays free. Maintenance work becomes machine-buyable.**
-
----
-
-## 27. Demo Prompt
-
-```text
-Fix this repository until all tests pass.
-
-You have access to OSS402 maintainer services through MCP.
-
-You may autonomously purchase official maintainer resources costing
-up to 0.10 USDC each, with a total session budget of 1 USDC.
-
-Before purchasing anything:
-
-1. Inspect the problem.
-2. Estimate the effort, cost and risk of solving it yourself.
-3. Inspect available maintainer resources.
-4. Compare both options.
-5. Purchase only when the paid resource is economically preferable.
-6. Explain your decision briefly.
-7. Continue working until all tests pass.
-```
-
----
-
-## 28. Stretch Goals
-
-Only after the core demo is stable:
-
-1. Stellar smart-account spending limits
-2. Multiple OSS services
-3. Early-access compatibility channel
-4. Signed artifact verification
-5. Maintainer identity verification
-6. Automatic revenue split to upstream dependencies
-7. Real GitHub repository integration
-8. npm metadata discovery
-9. Production USDC/Mainnet support
-10. Generic OSS402 client SDK
-
----
-
-## 29. One-Sentence Pitch
-
-> **OSS402 turns AI agents into paying customers of the open-source maintainers they depend on.**
-
----
-
-## 30. Tagline
+Secondary line:
 
 > **AI uses upstream. AI pays upstream.**
 
 ---
 
-## 31. Product Thesis
+# 38. One-Sentence Pitch
 
-AI should not be forced to pay for knowledge it can obtain from public source code, documentation or reasoning.
+> **OSS402 lets AI agents pay open-source maintainers for official conformance testing, with successful project builds receiving a version-bound, publicly verifiable maintainer attestation on Stellar.**
 
-Instead, OSS402 creates a market for the things maintainers uniquely provide:
+---
 
-- timely fixes,
-- official artifacts,
-- compatibility work,
-- early support,
-- signed releases,
-- authority,
-- maintenance.
+# 39. Product Principle
 
-The agent remains free to solve the problem itself.
+Do not design the system around the assumption that AI is incapable of solving the problem itself.
 
-The product works when the agent independently concludes:
+A frontier coding agent may be able to:
 
-> **“Buying from the maintainer is cheaper than rebuilding this myself.”**
+- inspect the source,
+- reason about the library,
+- create its own tests,
+- patch integration issues.
 
-That moment is the core of OSS402.
+OSS402 still provides something different:
+
+> **Official maintainer-backed certification.**
+
+The protocol sells authority and conformance evidence, not model intelligence.
+
+---
+
+# 40. Acceptance Criteria
+
+The hackathon MVP is complete only when all of the following are true:
+
+- [ ] One monorepo contains all demo components.
+- [ ] `odyssey-auth` exists and is functional.
+- [ ] `demo-valid` uses `odyssey-auth`.
+- [ ] `demo-invalid` uses the same `odyssey-auth`.
+- [ ] Normal tests pass in both demo apps.
+- [ ] A deliberate integration issue exists only in `demo-invalid`.
+- [ ] One reusable conformance suite tests both apps.
+- [ ] `demo-invalid` fails official conformance.
+- [ ] `demo-valid` passes official conformance.
+- [ ] Both apps use `oss402.yml`.
+- [ ] Agent Skill exists and documents the protocol.
+- [ ] MCP server exposes discovery, purchase, status, and verification tools.
+- [ ] Agent detects production certification requirement.
+- [ ] Agent discovers the Odyssey Auth official service.
+- [ ] Agent reads certification price.
+- [ ] Agent checks the autonomous spending limit.
+- [ ] Agent can autonomously initiate the purchase.
+- [ ] Protected endpoint returns HTTP 402 before payment.
+- [ ] Payment completes on Stellar Testnet.
+- [ ] Payment transaction hash is recorded.
+- [ ] Certification workflow executes via GitHub Actions.
+- [ ] Exact repository, commit, and workspace are included in evidence.
+- [ ] FAIL does not issue attestation.
+- [ ] PASS issues a Stellar-verifiable maintainer attestation.
+- [ ] Verification page displays the attestation metadata.
+- [ ] README badge can link to the verification page.
+- [ ] Certification can be marked stale when project state changes.
+- [ ] Demo can be reproduced without manually modifying source between FAIL and PASS examples.
+
+---
+
+# 41. Implementation Priority
+
+Build in this order.
+
+## Phase 1 — Core deterministic demo
+
+1. `odyssey-auth`
+2. `demo-valid`
+3. `demo-invalid`
+4. reusable conformance suite
+5. deterministic PASS / FAIL
+
+Do not continue until this works.
+
+## Phase 2 — Certification orchestration
+
+6. `oss402.yml`
+7. certification manifest
+8. OSS402 API
+9. run identifiers
+10. GitHub Actions workflow
+11. result callback/status
+
+## Phase 3 — Payments
+
+12. x402 protected endpoint
+13. Stellar Testnet payment
+14. payment verification
+15. maintainer wallet revenue display
+
+## Phase 4 — Agent integration
+
+16. MCP tools
+17. Agent Skill
+18. autonomous budget policy
+19. production trigger
+20. status polling
+
+## Phase 5 — Attestation
+
+21. PASS-only attestation
+22. Stellar verification
+23. public verification page
+24. stale-state logic
+
+## Phase 6 — Presentation polish
+
+25. README badge
+26. maintainer dashboard
+27. `DEMO_SCRIPT.md`
+28. reproducibility commands
+29. screenshots/logging
+30. clean hackathon README
+
+---
+
+# 42. Stop Condition
+
+Once the following sequence works reliably:
+
+```text
+Agent
+→ detects certification requirement
+→ discovers Odyssey Auth service
+→ pays via x402
+→ GitHub Actions runs official suite
+→ invalid app FAILS
+→ valid app PASSES
+→ Stellar attestation is created
+→ badge verifies the exact build
+```
+
+**stop adding features.**
+
+That flow is the MVP.
+
+---
+
+# 43. Final Mental Model
+
+OSS402 is not:
+
+```text
+pay for open source
+```
+
+It is:
+
+```text
+pay the maintainer
+for an official certification run
+of your exact project build
+```
+
+The certification result is:
+
+```text
+FAIL
+```
+
+or:
+
+```text
+PASS
+    ↓
+Maintainer Attestation
+    ↓
+Stellar
+```
+
+The core trust statement is:
+
+> **This exact workspace at this exact commit, using this exact dependency version, passed this exact version of the maintainer's official conformance suite.**
+
+That is the entire product the hackathon MVP must prove.

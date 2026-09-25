@@ -1,26 +1,27 @@
 # Esquema OSS402
 
-Qué vamos a construir en el MVP: un agente descubre un artefacto oficial de compatibilidad, decide comprarlo porque sale más barato que rehacerlo, paga 0.05 USDC con x402 en Stellar Testnet, aplica el patch y los tests pasan. El maintainer cobra.
+Qué construye el MVP: un agente lee la política de producción, compra una corrida de certificación oficial de `odyssey-auth` por 0.05 USDC con x402 en Stellar Testnet, GitHub Actions ejecuta la suite sobre el workspace exacto, y solo un PASS escribe una atestación del maintainer. El pago no compra un certificado.
 
-Paquete demo: `fastjson-x` v2.0. Runtime roto a propósito: Node.js 28.
+Biblioteca demo: `odyssey-auth` v1.0.0. Apps: `demo-valid` (PASS) y `demo-invalid` (FAIL `AUTH-017`).
 
 ## 1. Contexto
 
-Quién habla con el sistema y qué queda fuera.
-
 ```mermaid
 flowchart LR
-  dev["Developer"] -->|"politica de gasto"| agent["Coding Agent"]
-  maintainer["OSS Maintainer"] -->|"publica el artefacto"| oss402["OSS402"]
-  agent -->|"MCP: descubre, compara, compra"| oss402
-  agent -->|"npm test y git apply"| demo["demo-broken-app y fastjson-x"]
+  dev["Developer"] -->|"production ready"| agent["Coding Agent"]
+  maintainer["Odyssey Auth Maintainers"] -->|"define la suite"| oss402["OSS402"]
+  agent -->|"MCP y skill"| oss402
+  oss402 -->|"workflow_dispatch"| gha["GitHub Actions"]
+  gha -->|"corre la suite"| apps["demo-valid o demo-invalid"]
   oss402 -->|"402 y settlement USDC"| stellar["Stellar Testnet x402"]
   stellar -->|"0.05 USDC"| wallet["Wallet del maintainer"]
-  maintainer -->|"ve la compra"| dash["Maintainer Dashboard"]
+  oss402 -->|"PASS only"| att["Soroban attestation"]
+  att --> verify["Verification page"]
+  maintainer --> dash["Maintainer dashboard"]
   dash --> oss402
 ```
 
-El código, los docs públicos y el release estable de `fastjson-x` siguen gratis. OSS402 solo vende el trabajo extra del maintainer.
+El código, los docs y el release estable de `odyssey-auth` siguen gratis. OSS402 vende la autoridad de correr la suite oficial y atestar el resultado.
 
 ## 2. Contenedores
 
@@ -28,162 +29,149 @@ El código, los docs públicos y el release estable de `fastjson-x` siguen grati
 flowchart TB
   subgraph agentSide ["Lado del agente"]
     agent["Coding Agent"]
+    skill["oss402-certification skill"]
     mcp["OSS402 MCP"]
-    policy["Politica de gasto"]
+    policy["Politica en oss402.yml"]
   end
 
   subgraph product ["OSS402"]
-    api["OSS402 Server"]
-    catalog["Catalogo y registro de proyectos"]
-    store["Artefactos protegidos"]
-    records["Compras y hashes"]
-    dash["Maintainer Dashboard"]
+    api["OSS402 API"]
+    catalog["Catalogo y manifiesto"]
+    runs["Certification runs"]
+    dash["Dashboard"]
   end
 
-  subgraph demo ["Demo OSS"]
-    app["demo-broken-app"]
-    pkg["fastjson-x v2.0"]
-    artifact["node28 compatibility artifact"]
+  subgraph demo ["Demo monorepo"]
+    valid["demo-valid"]
+    invalid["demo-invalid"]
+    lib["odyssey-auth"]
+    suite["odyssey-auth-conformance"]
   end
 
-  stellar["Stellar Testnet x402"]
+  gha["GitHub Actions"]
+  stellar["Stellar Testnet"]
+  soroban["Soroban attestation"]
 
-  agent --> mcp
+  agent --> skill
+  skill --> mcp
   mcp --> policy
   mcp -->|"HTTP"| api
   api --> catalog
-  api --> store
-  api --> records
-  dash --> records
-  store --> artifact
-  api -->|"402, verifica y liquida"| stellar
-  agent --> app
-  app --> pkg
-  agent -->|"aplica compatibility.patch"| app
+  api --> runs
+  dash --> runs
+  api -->|"402"| stellar
+  api -->|"dispatch"| gha
+  gha --> suite
+  suite --> valid
+  suite --> invalid
+  valid --> lib
+  invalid --> lib
+  api -->|"PASS only"| soroban
 ```
 
-Herramientas MCP del MVP:
+Herramientas MCP:
 
 | Tool | Para qué |
 | --- | --- |
-| `discover_services` | Lista servicios de un proyecto, por ejemplo `fastjson-x` |
-| `inspect_service` | Precio, publisher, runtime objetivo y resultado esperado |
-| `wallet_balance` | Saldo USDC de la wallet del agente |
-| `check_budget` | Compara el precio contra el límite autónomo |
-| `purchase_resource` | Pide el recurso, paga el 402 y guarda el artefacto |
+| `oss402_discover` | Servicios de certificación de una dependencia |
+| `oss402_inspect` | Precio, suite, si emite atestación |
+| `oss402_purchase_certification` | 402, pago, `runId` |
+| `oss402_certification_status` | running / passed / failed |
+| `oss402_verify_attestation` | Metadata y validez del sujeto |
 
-Manifiesto público del proyecto, sin pago: `/.well-known/oss402.json`.
-
-Recurso protegido: `GET /api/resources/node28-compatibility`. Sin pago responde `402`. Con prueba de pago válida responde `200` y entrega el artefacto.
-
-## 3. Flujo de la demo
-
-Objetivo de pitch: unos 90 segundos. Nadie pulsa un botón de compra.
+## 3. Secuencia: pago, suite, PASS o FAIL
 
 ```mermaid
 sequenceDiagram
   participant Agent as Coding Agent
-  participant App as demo-broken-app
   participant MCP as OSS402 MCP
-  participant API as OSS402 Server
+  participant API as OSS402 API
   participant Chain as Stellar Testnet
-  participant Wallet as Wallet del maintainer
+  participant GHA as GitHub Actions
+  participant App as Demo workspace
 
-  Agent->>App: npm test
-  App-->>Agent: 41 passed, 1 failed
-  Note over Agent: fastjson-x v2.0 no es compatible con Node.js 28
-  Agent->>MCP: discover_services fastjson-x
-  MCP->>API: leer catalogo
-  API-->>Agent: Official Node.js 28 Compatibility Artifact, 0.05 USDC
-  Agent->>MCP: inspect_service y check_budget 0.05
-  MCP-->>Agent: permitido, queda 0.95 de 1.00
-  Note over Agent: Rehacerlo cuesta mas tiempo y compute. Decision BUY
-  Agent->>MCP: purchase_resource
-  MCP->>API: GET /api/resources/node28-compatibility
+  Agent->>Agent: Lee oss402.yml production required
+  Agent->>MCP: oss402_discover odyssey-auth
+  MCP->>API: catalogo
+  API-->>Agent: conformance v1, 0.05 USDC
+  Agent->>MCP: inspect y check budget 0.05
+  MCP-->>Agent: permitido bajo 0.10 autonomo
+  Agent->>MCP: purchase_certification
+  MCP->>API: POST certifications
   API-->>MCP: 402 Payment Required
-  MCP->>Chain: autoriza y liquida 0.05 USDC
-  Chain-->>Wallet: settlement
-  Chain-->>MCP: transaction hash
+  MCP->>Chain: liquida 0.05 USDC
+  Chain-->>MCP: tx hash
   MCP->>API: reintenta con prueba de pago
-  API-->>MCP: 200 artefacto
-  MCP-->>Agent: .oss402/node28-compatibility/
-  Agent->>App: git apply compatibility.patch
-  Agent->>App: npm test
-  App-->>Agent: 42 passed, 0 failed
+  API-->>MCP: 200 runId queued
+  API->>GHA: workflow_dispatch
+  GHA->>App: checkout commit, start, suite
+  App-->>GHA: PASS o FAIL
+  GHA->>API: callback resultado
+  alt PASS
+    API->>Chain: escribe attestation hash
+    API-->>Agent: passed + attestationId
+  else FAIL
+    API-->>Agent: failed + AUTH-017, sin attestation
+  end
 ```
 
-Timing previsto:
+## 4. Contraste de las dos apps
 
-| Tiempo | Qué se ve |
-| --- | --- |
-| 0:00–0:10 | El problema: la IA usa upstream y el maintainer no cobra |
-| 0:10–0:20 | `npm test` falla |
-| 0:20–0:35 | Descubre el artefacto oficial |
-| 0:35–0:50 | Compara rehacerlo contra comprarlo |
-| 0:50–1:05 | Pago x402 en Stellar y hash visible |
-| 1:05–1:20 | Aplica el patch |
-| 1:20–1:30 | Tests en verde y +0.05 USDC en el dashboard |
-
-## 4. Decisión económica
-
-El agente compra solo si el precio cabe en el límite autónomo y rehacerlo sale peor: más caro, más riesgoso, o con menos confianza que el artefacto oficial.
+Misma librería, misma suite, mismo workflow. Solo cambia la configuración.
 
 ```mermaid
 flowchart TD
-  start["Problema de compatibilidad"] --> free["Primero mira codigo, docs y tests publicos"]
-  free --> found{"Hay recurso OSS402 oficial?"}
-  found -->|no| solo["Lo resuelve solo"]
-  found -->|si| est["Estima rehacerlo: tiempo, compute, riesgo, confianza"]
-  est --> price{"Precio menor o igual a 0.10 USDC?"}
-  price -->|no| deny["DENEGADO: hace falta aprobacion humana"]
-  price -->|si| better{"Rehacerlo es mas caro, mas riesgoso o menos confiable?"}
-  better -->|no| solo
-  better -->|si| buy["BUY"]
-  buy --> pay["x402: 402, pago, 200"]
-  pay --> apply["Aplica el artefacto y sigue"]
+  subgraph both ["Ambas apps"]
+    unit["Unit tests PASS"]
+    build["Build PASS"]
+    lint["Lint PASS"]
+  end
+
+  both --> suite["Odyssey Auth Conformance v1"]
+
+  suite --> validPath["apps/demo-valid"]
+  suite --> invalidPath["apps/demo-invalid"]
+
+  validPath --> pass["30 / 30 PASS"]
+  pass --> att["Maintainer attestation on Stellar"]
+  pass --> badge["README badge opt-in"]
+
+  invalidPath --> fail["29 / 30 FAIL"]
+  fail --> code["AUTH-017 Expired token was accepted"]
+  fail --> none["No attestation"]
 ```
 
-Ejemplo del caso demo:
+Esto prueba que el pago no garantiza aprobación y que la suite evalúa el proyecto, no un resultado hardcodeado.
 
-| Opción | Costo | Riesgo | Confianza |
-| --- | --- | --- | --- |
-| Rehacer el patch | ~15–20 min, ~0.20–0.30 USD de compute | Medio | ~0.72 |
-| Comprar el artefacto oficial | 0.05 USDC | Bajo, lo respalda el maintainer | ~0.98 |
+## 5. Binding de la atestación y stale
 
-Decisión: comprar. El límite autónomo es 0.10 USDC, así que no pide confirmación.
+La atestación no se ata solo a `repository + commit`. Las dos demos viven en el mismo repo y pueden compartir commit.
 
-Por encima del límite, por ejemplo 3.00 USDC, el MCP rechaza la compra y pide aprobación humana. En el MVP esa política vive en el MCP. Smart accounts de Stellar quedan como stretch.
+```mermaid
+flowchart TD
+  subject["Subject hash"] --> repo["repository"]
+  subject --> commit["commit"]
+  subject --> workspace["workspace path"]
+  subject --> dep["dependency version"]
+  subject --> suiteVer["suite version"]
+  subject --> config["configuration or build hash"]
 
-## 5. Artefacto que se entrega
-
-```text
-fastjson-node28-compat/
-├── compatibility.patch
-├── manifest.json
-└── compatibility-report.md
+  check{"Current subject matches attestation?"}
+  subject --> check
+  check -->|yes| ok["Maintainer Conformant"]
+  check -->|no| stale["CERTIFICATION STALE"]
 ```
 
-`manifest.json` declara proyecto, versión pública `2.0.0`, runtime `node` 28, tipo `official_compatibility_patch`, publisher y hash.
+Stale significa: este build no está certificado. No significa que falló la certificación.
 
-## 6. Dashboard del maintainer
+## 6. Precio y política
 
-Después del pago se ve, como mínimo:
+| Concepto | Valor |
+| --- | --- |
+| Precio por corrida | 0.05 USDC |
+| Incluye | intento inicial + 1 remediation retry |
+| Límite autónomo | 0.10 USDC |
+| Presupuesto de sesión | 1.00 USDC |
+| Red | stellar-testnet |
 
-```text
-OSS402
-fastjson-x
-Revenue          0.05 USDC
-AI consumers     1
-Node 28 Compatibility Artifact
-0.05 USDC · 1 purchase
-```
-
-Gráficos, saldo y ranking de recursos son opcionales. No son parte del loop que hay que cerrar primero.
-
-## 7. Qué no entra en el MVP
-
-No es un marketplace de paquetes, ni un paywall del repo, ni donaciones, ni docs de pago, ni un token, ni reparto de revenue entre dependencias, ni mainnet.
-
-El criterio de cierre es un solo loop fiable: tests rojos, descubrimiento, comparación, 402, settlement en Stellar Testnet, artefacto aplicado, tests verdes, hash visible y dashboard actualizado.
-
-Detalle de requisitos, manifiesto, criterios de aceptación y stretch goals: [PRD.md](PRD.md).
+Detalle de requisitos: [PRD.md](PRD.md).
