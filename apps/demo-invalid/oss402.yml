@@ -1,0 +1,37 @@
+project:
+  id: demo-invalid
+
+environment:
+  target: production
+
+runtime:
+  install: pnpm install --frozen-lockfile
+  build: pnpm --filter demo-invalid build
+  start: pnpm --filter demo-invalid start
+  port: 3002
+
+dependency:
+  name: odyssey-auth
+  version: 1.0.0
+
+conformance:
+  baseUrl: http://127.0.0.1:3002
+  mappings:
+    login: /api/login
+    loginExpired: /api/login-expired
+    protected: /api/profile
+    admin: /api/admin
+    logout: /api/logout
+    health: /health
+
+certification:
+  requiredFor:
+    - production
+
+dependencies:
+  odyssey-auth:
+    certification: required
+
+agent:
+  totalBudgetUSDC: 1.00
+  maxAutonomousPurchaseUSDC: 0.10
