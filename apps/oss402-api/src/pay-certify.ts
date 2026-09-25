@@ -3,6 +3,7 @@ import { Transaction, TransactionBuilder } from "@stellar/stellar-sdk";
 import { x402Client, x402HTTPClient } from "@x402/fetch";
 import { createEd25519Signer, getNetworkPassphrase } from "@x402/stellar";
 import { ExactStellarScheme } from "@x402/stellar/exact/client";
+import { transactionHashFromPaymentResponseHeaders } from "oss402-client";
 
 loadRepoEnv();
 
@@ -75,7 +76,14 @@ const paid = await fetch(url, {
   body,
 });
 const json = (await paid.json()) as { runId?: string };
-console.log("Paid response:", paid.status, JSON.stringify(json, null, 2));
+const transactionHash = transactionHashFromPaymentResponseHeaders((name) =>
+  paid.headers.get(name),
+);
+console.log(
+  "Paid response:",
+  paid.status,
+  JSON.stringify({ ...json, transactionHash }, null, 2),
+);
 if (!paid.ok || !json.runId) process.exit(1);
 
 for (let i = 0; i < 30; i++) {

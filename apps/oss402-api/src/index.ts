@@ -4,8 +4,12 @@ import { loadRepoEnv } from "./env.js";
 import { finalizeCertificationRun } from "./finalize-run.js";
 
 loadRepoEnv();
-import { paymentMiddlewareFromConfig } from "@x402/express";
-import { HTTPFacilitatorClient } from "@x402/core/server";
+import { paymentMiddleware } from "@x402/express";
+import {
+  HTTPFacilitatorClient,
+  x402ResourceServer,
+  type HTTPTransportContext,
+} from "@x402/core/server";
 import { ExactStellarScheme } from "@x402/stellar/exact/server";
 import { ODYSSEY_AUTH_SERVICE } from "oss402-client";
 import { executeCertificationLocally } from "./runner.js";
@@ -224,8 +228,39 @@ if (!PAY_TO) {
       : undefined,
   });
 
+  const resourceServer = new x402ResourceServer(facilitatorClient);
+  resourceServer.register(NETWORK, new ExactStellarScheme());
+  resourceServer.onAfterSettle(async (context) => {
+    const tx = context.result.transaction;
+    if (!context.result.success || !tx) {
+      return;
+    }
+    const transport = context.transportContext as HTTPTransportContext | undefined;
+    const bodyText = transport?.responseBody?.toString("utf8");
+    if (!bodyText) {
+      return;
+    }
+    let runId: string | undefined;
+    try {
+      const body = JSON.parse(bodyText) as { runId?: string };
+      runId = body.runId;
+    } catch {
+      return;
+    }
+    if (!runId) {
+      return;
+    }
+    const store = loadStore();
+    const run = store.runs.find((r) => r.runId === runId);
+    if (!run) {
+      return;
+    }
+    run.paymentTx = tx;
+    saveStore(store);
+  });
+
   app.use(
-    paymentMiddlewareFromConfig(
+    paymentMiddleware(
       {
         [`POST ${CERT_PATH}`]: {
           accepts: {
@@ -238,8 +273,7 @@ if (!PAY_TO) {
             "Official Odyssey Auth Conformance v1 certification run (includes 1 remediation retry)",
         },
       },
-      facilitatorClient,
-      [{ network: NETWORK, server: new ExactStellarScheme() }],
+      resourceServer,
     ),
   );
 
@@ -260,11 +294,6 @@ if (!PAY_TO) {
 
     const store = loadStore();
     const runId = nextRunId(store);
-    const paymentTx =
-      (req.headers["x-payment-response"] as string | undefined) ??
-      (req.headers["payment-response"] as string | undefined) ??
-      "settled-via-x402";
-
     store.runs.push({
       runId,
       status: "queued",
@@ -274,7 +303,7 @@ if (!PAY_TO) {
       dependency: body.dependency ?? "odyssey-auth@1.0.0",
       suiteVersion: "v1",
       paid: "0.05 USDC",
-      paymentTx,
+      paymentTx: "pending-x402-settlement",
       createdAt: new Date().toISOString(),
     });
     store.revenueUSDC += 0.05;
@@ -306,7 +335,6 @@ if (!PAY_TO) {
       runId,
       status: "queued",
       paid: "0.05 USDC",
-      transactionHash: paymentTx,
     });
   });
 }

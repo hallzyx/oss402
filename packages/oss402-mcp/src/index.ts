@@ -12,7 +12,10 @@ import { x402Client, x402HTTPClient } from "@x402/fetch";
 import { createEd25519Signer, getNetworkPassphrase } from "@x402/stellar";
 import { ExactStellarScheme } from "@x402/stellar/exact/client";
 import { parse as parseYaml } from "yaml";
-import { ODYSSEY_AUTH_SERVICE } from "oss402-client";
+import {
+  ODYSSEY_AUTH_SERVICE,
+  transactionHashFromPaymentResponseHeaders,
+} from "oss402-client";
 
 const API_BASE = process.env.OSS402_API_URL ?? "http://127.0.0.1:8787";
 const NETWORK = "stellar:testnet";
@@ -175,11 +178,16 @@ async function payAndPurchase(input: {
     };
   }
 
+  const transactionHash =
+    transactionHashFromPaymentResponseHeaders((name) =>
+      paidResponse.headers.get(name),
+    ) ?? paidJson.transactionHash;
+
   return {
     success: true,
     paid: "0.05 USDC",
     runId: paidJson.runId,
-    transactionHash: paidJson.transactionHash,
+    transactionHash,
     status: paidJson.status,
     budget: {
       remainingAfterPurchase: budget.remainingAfterPurchase,

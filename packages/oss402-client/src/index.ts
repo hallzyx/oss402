@@ -1,3 +1,5 @@
+export { transactionHashFromPaymentResponseHeaders } from "./payment-tx.js";
+
 export interface CertificationService {
   id: string;
   type: "official_conformance";
