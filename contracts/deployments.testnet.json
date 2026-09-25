@@ -1,0 +1,10 @@
+{
+  "network": "testnet",
+  "contractId": "CAHOYKJPZNQ73XH3WCW7KLKWYT3SIHWL3UNEVTDNIMRQPIQMYBAVBMSI",
+  "wasmHash": "a41ace72bda645027e79c0edaf7a5b255ca9363df2e96013bd70b1a618e424d1",
+  "deployerIdentity": "deployer2",
+  "deployerAddress": "GAGFYNO73QSTBD5NBJ5DTJ3GSWGA255VZ4W5CJ2Q2WIEEC2MN6FVFB2T",
+  "deployTx": "476a836d8a3f01a4109096baa98147be833c0b6f4931f46d5655b9f3bc08d0b8",
+  "alias": "oss402-attestation",
+  "deployedAt": "2026-09-25"
+}

@@ -28,17 +28,18 @@ export async function maybeWriteOnChainAttestation(
   const digest = subjectDigestHex(subjectHash);
 
   try {
-    const { stdout } = await execFileAsync(
+    const { stdout, stderr } = await execFileAsync(
       "stellar",
       [
         "contract",
         "invoke",
         "--id",
         contractId,
-        "--source",
+        "--source-account",
         identity,
         "--network",
         network,
+        "--send=yes",
         "--",
         "attest",
         "--issuer",
@@ -48,10 +49,13 @@ export async function maybeWriteOnChainAttestation(
         "--attestation_id",
         attestationId,
       ],
-      { timeout: 120_000 },
+      { timeout: 120_000, maxBuffer: 2 * 1024 * 1024 },
     );
-    const txMatch = stdout.match(/[a-f0-9]{64}/i);
-    return (txMatch?.[0] ?? stdout.trim().slice(0, 80)) || "soroban-attest-ok";
+    const combined = `${stdout}\n${stderr}`;
+    const txMatch =
+      combined.match(/explorer\/testnet\/tx\/([a-f0-9]{64})/i) ??
+      combined.match(/Signing transaction:\s*([a-f0-9]{64})/i);
+    return txMatch?.[1] ?? "soroban-attest-ok";
   } catch (error) {
     console.warn(
       "[oss402-api] on-chain attestation skipped:",
