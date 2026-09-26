@@ -1,31 +1,27 @@
 import type { ReactNode } from "react";
+import { Newsreader, Outfit } from "next/font/google";
+import "./globals.css";
+
+const display = Newsreader({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-display",
+});
+
+const sans = Outfit({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 
 export const metadata = {
-  title: "OSS402 Dashboard",
-  description: "Maintainer certification verification and revenue",
+  title: "OSS402",
+  description: "Official maintainer conformance. AI uses upstream. AI pays upstream.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body
-        style={{
-          margin: 0,
-          fontFamily: "ui-sans-serif, system-ui, sans-serif",
-          background: "#0b1020",
-          color: "#e8eefc",
-        }}
-      >
-        <main style={{ maxWidth: 880, margin: "0 auto", padding: "2rem 1.25rem" }}>
-          <header style={{ marginBottom: "2rem" }}>
-            <p style={{ letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.7 }}>
-              OSS402
-            </p>
-            <h1 style={{ margin: "0.25rem 0" }}>Maintainer Certification</h1>
-          </header>
-          {children}
-        </main>
-      </body>
+    <html lang="en" className={`${display.variable} ${sans.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }

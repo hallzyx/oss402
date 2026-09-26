@@ -1,0 +1,49 @@
+.shell {
+  min-height: 100vh;
+  background: #f4f7fb;
+  color: #0b1220;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.75rem;
+  background: #fff;
+  border-bottom: 1px solid #e6edf5;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0b1220;
+  text-decoration: none;
+}
+
+.brandMark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #111111;
+  box-shadow: inset 0 0 0 6px #f6c945;
+}
+
+.nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  background: #f6c945;
+  color: #111111;
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.nav a:hover {
+  background: #ffe14a;
+  color: #111111;
+}

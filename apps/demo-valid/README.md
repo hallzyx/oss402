@@ -1,6 +1,6 @@
 # demo-valid
 
-[![Odyssey Auth Maintainer Conformant](./oss402-badge.svg)](#oss402-verification)
+[![Odyssey Auth Maintainer Conformant](./oss402-badge.svg)](http://localhost:3000/verify/att_4)
 
 Correctly configured consumer of `odyssey-auth`.
 
@@ -20,7 +20,7 @@ This badge is shown after an official **Odyssey Auth Conformance v1** run return
 
 | View | Local (with `pnpm dev:api` + `pnpm dev:dashboard`) |
 | --- | --- |
-| Verification page | http://localhost:3000/verify/`{attestationId}` |
+| Credential landing (badge click) | http://localhost:3000/verify/`{attestationId}` or `/badge/{attestationId}` |
 | Attestation JSON | http://127.0.0.1:8787/api/attestations/`{attestationId}` |
 | Dynamic badge SVG | http://127.0.0.1:8787/api/badge/`{attestationId}`.svg |
 
