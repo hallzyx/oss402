@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "oss402": {
+      "type": "local",
+      "command": ["node", "packages/oss402-mcp/dist/index.js"],
+      "cwd": ".",
+      "enabled": true,
+      "timeout": 30000,
+      "environment": {
+        "OSS402_API_URL": "http://127.0.0.1:8787"
+      }
+    }
+  }
+}

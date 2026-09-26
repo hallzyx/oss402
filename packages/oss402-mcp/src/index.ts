@@ -1,4 +1,4 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -16,6 +16,11 @@ import {
   ODYSSEY_AUTH_SERVICE,
   transactionHashFromPaymentResponseHeaders,
 } from "oss402-client";
+
+const envFile = dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+if (!process.env.STELLAR_PRIVATE_KEY?.trim() && envFile.parsed?.STELLAR_PRIVATE_KEY) {
+  process.env.STELLAR_PRIVATE_KEY = envFile.parsed.STELLAR_PRIVATE_KEY;
+}
 
 const API_BASE = process.env.OSS402_API_URL ?? "http://127.0.0.1:8787";
 const NETWORK = "stellar:testnet";
