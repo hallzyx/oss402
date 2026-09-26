@@ -19,7 +19,7 @@ import {
   getStats,
   loadStore,
   nextRunId,
-  saveStore,
+  withStore,
 } from "./store.js";
 
 const PORT = Number(process.env.PORT ?? 8787);
@@ -84,6 +84,18 @@ app.get("/api/services/:serviceId", (req, res) => {
     includesRetry: true,
     note: "0.05 USDC includes the initial certification attempt and 1 remediation retry",
   });
+});
+
+app.get("/api/certifications", (_req, res) => {
+  const store = loadStore();
+  const runs = [...store.runs].reverse().map((run) => {
+    const attestation = store.attestations.find((item) => item.runId === run.runId);
+    return {
+      ...run,
+      stellarTx: attestation?.stellarTx,
+    };
+  });
+  res.json({ runs });
 });
 
 app.get("/api/certifications/:runId", (req, res) => {
@@ -167,15 +179,14 @@ app.post("/api/certifications/:runId/callback", async (req, res) => {
     return;
   }
 
-  const store = loadStore();
-  const run = store.runs.find((r) => r.runId === req.params.runId);
-  if (!run) {
+  const existing = loadStore().runs.find((r) => r.runId === req.params.runId);
+  if (!existing) {
     res.status(404).json({ error: "run not found" });
     return;
   }
 
-  if (run.status === "passed" || run.status === "failed") {
-    res.json(run);
+  if (existing.status === "passed" || existing.status === "failed") {
+    res.json(existing);
     return;
   }
 
@@ -192,16 +203,22 @@ app.post("/api/certifications/:runId/callback", async (req, res) => {
     return;
   }
 
-  run.status = "running";
-  await finalizeCertificationRun(store, run, {
-    result: body.result,
-    passed: body.passed,
-    failed: body.failed,
-    total: body.total ?? body.passed + body.failed,
-    report: body.report ?? undefined,
+  const run = await withStore(async (store) => {
+    const current = store.runs.find((r) => r.runId === req.params.runId);
+    if (!current) {
+      return undefined;
+    }
+    current.status = "running";
+    await finalizeCertificationRun(store, current, {
+      result: body.result!,
+      passed: body.passed!,
+      failed: body.failed!,
+      total: body.total ?? body.passed! + body.failed!,
+      report: body.report ?? undefined,
+    });
+    return current;
   });
 
-  saveStore(store);
   res.json(run);
 });
 
@@ -250,13 +267,13 @@ if (!PAY_TO) {
     if (!runId) {
       return;
     }
-    const store = loadStore();
-    const run = store.runs.find((r) => r.runId === runId);
-    if (!run) {
-      return;
-    }
-    run.paymentTx = tx;
-    saveStore(store);
+    await withStore((store) => {
+      const run = store.runs.find((r) => r.runId === runId);
+      if (!run) {
+        return;
+      }
+      run.paymentTx = tx;
+    });
   });
 
   app.use(
@@ -292,36 +309,37 @@ if (!PAY_TO) {
       return;
     }
 
-    const store = loadStore();
-    const runId = nextRunId(store);
-    store.runs.push({
-      runId,
-      status: "queued",
-      repository: body.repository,
-      commit: body.commit,
-      workspace: body.workspace,
-      dependency: body.dependency ?? "odyssey-auth@1.0.0",
-      suiteVersion: "v1",
-      paid: "0.05 USDC",
-      paymentTx: "pending-x402-settlement",
-      createdAt: new Date().toISOString(),
+    const runId = await withStore((store) => {
+      const id = nextRunId(store);
+      store.runs.push({
+        runId: id,
+        status: "queued",
+        repository: body.repository!,
+        commit: body.commit!,
+        workspace: body.workspace!,
+        dependency: body.dependency ?? "odyssey-auth@1.0.0",
+        suiteVersion: "v1",
+        paid: "0.05 USDC",
+        paymentTx: "pending-x402-settlement",
+        createdAt: new Date().toISOString(),
+      });
+      store.revenueUSDC += 0.05;
+      return id;
     });
-    store.revenueUSDC += 0.05;
-    saveStore(store);
 
     if (RUN_LOCALLY) {
-      void executeCertificationLocally(runId).catch((error) => {
+      void executeCertificationLocally(runId).catch(async (error) => {
         console.error(`[oss402-api] certification ${runId} failed`, error);
-        const latest = loadStore();
-        const run = latest.runs.find((r) => r.runId === runId);
-        if (run && run.status === "running") {
-          run.status = "failed";
-          run.report = {
-            code: "RUNNER-ERROR",
-            message: error instanceof Error ? error.message : String(error),
-          };
-          saveStore(latest);
-        }
+        await withStore((latest) => {
+          const run = latest.runs.find((r) => r.runId === runId);
+          if (run && run.status === "running") {
+            run.status = "failed";
+            run.report = {
+              code: "RUNNER-ERROR",
+              message: error instanceof Error ? error.message : String(error),
+            };
+          }
+        });
       });
     } else if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPOSITORY) {
       await dispatchGithubWorkflow({

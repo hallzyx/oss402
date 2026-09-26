@@ -37,6 +37,22 @@ export function saveStore(store: StoreData) {
   writeFileSync(storePath, JSON.stringify(store, null, 2));
 }
 
+let storeQueue: Promise<unknown> = Promise.resolve();
+
+export function withStore<T>(mutator: (store: StoreData) => T | Promise<T>): Promise<T> {
+  const run = storeQueue.then(async () => {
+    const store = loadStore();
+    const result = await mutator(store);
+    saveStore(store);
+    return result;
+  });
+  storeQueue = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
+
 export function nextRunId(store: StoreData): string {
   return `cert_${store.runs.length + 1}`;
 }
