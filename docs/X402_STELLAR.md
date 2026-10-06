@@ -4,11 +4,10 @@ This document is the payment path for one official certification run.
 
 ## Quick path
 
-1. Fund a payer account on Stellar Testnet with XLM for fees and USDC for the 0.05 charge.
-2. Give the maintainer account a USDC trustline. Put only its `G...` address in `MAINTAINER_STELLAR_ADDRESS`.
-3. Put the payer secret in `STELLAR_PRIVATE_KEY`.
-4. Start the API.
-5. Buy one run and open the settlement transaction on Stellar Expert.
+1. Create a payer account and a maintainer account. Fund both with Friendbot, add a USDC trustline on both, and request testnet USDC for the payer from the Circle faucet. The steps and the issuer are in [Getting Started](GETTING_STARTED.md#fund-the-two-testnet-accounts).
+2. Put the payer secret in `STELLAR_PRIVATE_KEY` and the maintainer `G...` address in `MAINTAINER_STELLAR_ADDRESS`.
+3. Start the API.
+4. Buy one run and open the settlement transaction on Stellar Expert.
 
 ## Submission evidence
 

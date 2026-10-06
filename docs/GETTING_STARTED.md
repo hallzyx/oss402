@@ -9,7 +9,29 @@ This guide takes a checkout to a local OSS402 stack that can settle a real 0.05 
 - A Stellar Testnet account that will pay (secret key, USDC trustline, a small USDC balance)
 - A Stellar Testnet maintainer account that will receive USDC (address only is required in `.env`)
 
-The payer and the maintainer should be different accounts. The demo uses a separate payer wallet.
+The payer and the maintainer are different accounts. The payer signs the 0.05 USDC transfer. The maintainer address only receives it, and it must be able to hold USDC.
+
+## Fund the two Testnet accounts
+
+Use Stellar Testnet USDC. Asset code `USDC`, issuer `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`. That is the asset x402 settles on `stellar:testnet`.
+
+Create two keypairs (Stellar Lab, Freighter on testnet, or `stellar keys generate`). Keep the payer secret for `.env`. Keep the maintainer secret only if that same account will sign Soroban `attest` calls. The API needs the maintainer **address** to get paid.
+
+For each account:
+
+1. Fund XLM so the account exists and can pay fees. Open [Stellar Lab fund](https://lab.stellar.org/account/fund) and paste the public key, or request Friendbot directly:
+
+   ```text
+   https://friendbot.stellar.org?addr=G...
+   ```
+
+2. Add a USDC trustline. On the same Lab fund page, use the trustline action. Or in [Lab Transaction Builder](https://lab.stellar.org/transaction/build), fetch the next sequence number and add **Change Trust** with asset `USDC` and issuer `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`. Sign and submit on Testnet. Do this for the payer and the maintainer. A maintainer without a trustline cannot receive the payment (`op_no_trust`).
+
+3. Fund the **payer** with testnet USDC. Open the [Circle faucet](https://faucet.circle.com), choose Stellar Testnet, and submit the payer public key. A few USDC is enough. Each certification run spends 0.05.
+
+You do not need to faucet USDC to the maintainer. That account only needs the trustline so settlement can credit it.
+
+Confirm both accounts on [Stellar Expert Testnet](https://stellar.expert/explorer/testnet) before the first paid run.
 
 ## 1. Create local configuration
 

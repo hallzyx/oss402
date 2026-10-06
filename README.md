@@ -1,5 +1,9 @@
 # OSS402
 
+[![CI](https://github.com/hallzyx/oss402/actions/workflows/ci.yml/badge.svg)](https://github.com/hallzyx/oss402/actions/workflows/ci.yml)
+[![Stellar Testnet](https://img.shields.io/badge/Stellar-Testnet-111111?logo=stellar&logoColor=f6c945)](https://stellar.expert/explorer/testnet/contract/CAHOYKJPZNQ73XH3WCW7KLKWYT3SIHWL3UNEVTDNIMRQPIQMYBAVBMSI)
+[![x402](https://img.shields.io/badge/pay-0.05%20USDC-f6c945?logo=stellar&logoColor=111111)](docs/X402_STELLAR.md)
+
 **Tests tell you that your code works. OSS402 tells you that the maintainer agrees.**
 
 **AI uses upstream. AI pays upstream.**
@@ -24,6 +28,16 @@ Payment buys a certification **run**, not a certificate. A FAIL still settles. N
 ## Pitch
 
 > OSS402 lets AI agents pay open-source maintainers for official conformance testing, with successful project builds receiving a version-bound, publicly verifiable maintainer attestation on Stellar.
+
+## What you see
+
+The public landing, the maintainer ledger, and a PASS credential. On the ledger, Payment is the USDC settlement. `cert_7` failed and has no credential. `cert_8` passed and links to one.
+
+![OSS402 public landing](docs/images/landing.png)
+
+![Maintainer ledger with Stellar payment links](docs/images/maintainer.png)
+
+![PASS credential for demo-valid](docs/images/credential.png)
 
 ## Start here
 
@@ -55,12 +69,14 @@ README is the entry point. Continue with the document that matches the work you 
 
 | Document | Use it when you need to… |
 | --- | --- |
+| [Protocol](docs/PROTOCOL.md) | Read `oss402.yml`, the certification HTTP contract, and the PASS versus FAIL body |
 | [Architecture](docs/ARCHITECTURE.md) | Understand services, trust boundaries, request flows, and what an attestation binds |
 | [Getting Started](docs/GETTING_STARTED.md) | Install, start, and verify a local stack |
 | [Configuration](docs/CONFIGURATION.md) | Configure settlement, the dashboard, and secrets |
 | [MCP and Agent Skill](docs/MCP_AND_AGENT_SKILL.md) | Connect OpenCode and follow the certification skill |
 | [x402 and Stellar](docs/X402_STELLAR.md) | Pay for a run and read Testnet settlement evidence |
 | [Operations](docs/OPERATIONS.md) | Run the API, inspect the ledger, and read a credential |
+| [Conformance](docs/CONFORMANCE.md) | Read the 30 official cases and why `demo-invalid` still passes its own tests |
 | [Testing](docs/TESTING.md) | Run unit tests, the official suite, and a paid check |
 | [Security](docs/SECURITY.md) | Review who may hold the payer key and the maintainer key |
 | [Product requirements](docs/PRD.md) | Read the product decisions for the hackathon MVP |
@@ -157,6 +173,16 @@ contracts/
 docs/                           maintainer and user documentation
 ```
 
+| Package | Guide |
+| --- | --- |
+| API | [apps/oss402-api](apps/oss402-api/README.md) |
+| Dashboard | [apps/dashboard](apps/dashboard/README.md) |
+| MCP buyer | [packages/oss402-mcp](packages/oss402-mcp/README.md) |
+| Shared types | [packages/oss402-client](packages/oss402-client/README.md) |
+| Official suite | [packages/odyssey-auth-conformance](packages/odyssey-auth-conformance/README.md) |
+| Free library | [packages/odyssey-auth](packages/odyssey-auth/README.md) |
+| Attestation contract | [contracts/oss402-attestation](contracts/oss402-attestation/README.md) |
+
 ## Development commands
 
 ```bash
@@ -210,6 +236,10 @@ Paid settlement is a separate check. Use one controlled run and confirm the Stel
 - Keep product decisions in `docs/PRD.md`.
 - Keep the agent workflow in `.agents/skills/oss402-certification/SKILL.md` and the short rules in `AGENTS.md`.
 - Update links and evidence hashes when a new official run replaces the ones listed above.
+
+## License
+
+OSS402 is licensed under the [MIT License](LICENSE).
 
 ## Repository
 

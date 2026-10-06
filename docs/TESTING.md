@@ -8,7 +8,7 @@ OSS402 has three layers. Keep them separate when you report a result.
 | Official conformance suite | No | The maintainer suite accepted that workspace |
 | Paid certification run | Yes, 0.05 | The API recorded settlement and the suite result |
 
-`demo-invalid` passes its unit tests and fails the official suite. Quoting the unit tests as certification is incorrect.
+`demo-invalid` passes its unit tests and fails the official suite. Quoting the unit tests as certification is incorrect. The case list and the reason are in [Conformance](CONFORMANCE.md).
 
 ## Quick path
 
@@ -32,6 +32,8 @@ pnpm conformance:full:invalid
 | `pnpm pay:certify <workspace> <label>` | One paid run against a running API |
 
 The conformance commands do not talk to the API and do not settle x402. Use them before spending.
+
+CI runs `conformance:full:valid` as a normal passing step. The invalid step succeeds only when the suite exits non-zero and the log contains `AUTH-017`. A green badge means both of those held.
 
 ## Expected baselines
 

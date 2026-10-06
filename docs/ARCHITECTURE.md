@@ -180,11 +180,13 @@ docs/
 
 ## Related documents
 
+- [Protocol](PROTOCOL.md)
 - [Getting Started](GETTING_STARTED.md)
 - [Configuration](CONFIGURATION.md)
 - [MCP and Agent Skill](MCP_AND_AGENT_SKILL.md)
 - [x402 and Stellar](X402_STELLAR.md)
 - [Operations](OPERATIONS.md)
+- [Conformance](CONFORMANCE.md)
 - [Testing](TESTING.md)
 - [Security](SECURITY.md)
 - [Product requirements](PRD.md)

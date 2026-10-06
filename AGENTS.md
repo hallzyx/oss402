@@ -54,4 +54,4 @@ Do not edit source between those demos. The contrast is intentional.
 
 ## Documentation
 
-Human-facing setup and payment docs are indexed from `README.md`. Start with `docs/GETTING_STARTED.md` and `docs/MCP_AND_AGENT_SKILL.md`.
+Human-facing setup and payment docs are indexed from `README.md`. Start with `docs/PROTOCOL.md`, `docs/GETTING_STARTED.md`, and `docs/MCP_AND_AGENT_SKILL.md`.

@@ -20,4 +20,4 @@ odysseyAuth({
 
 Do not "fix" this app when demonstrating the contrast with `demo-valid`. The official suite is supposed to fail here.
 
-See [Testing](../../docs/TESTING.md) for the commands and [x402 and Stellar](../../docs/X402_STELLAR.md) for a settled FAIL transaction.
+See [Conformance](../../docs/CONFORMANCE.md) for PUB-007, [Testing](../../docs/TESTING.md) for the commands, and [x402 and Stellar](../../docs/X402_STELLAR.md) for a settled FAIL transaction.
