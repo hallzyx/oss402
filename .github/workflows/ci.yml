@@ -28,5 +28,15 @@ jobs:
       - run: pnpm test:valid
       - run: pnpm test:invalid
       - run: pnpm conformance:full:valid
-      - run: pnpm conformance:full:invalid
-        continue-on-error: true
+
+      - name: demo-invalid fails the official suite with AUTH-017
+        run: |
+          set +e
+          output=$(pnpm conformance:full:invalid 2>&1)
+          code=$?
+          printf '%s\n' "$output"
+          if [ "$code" -eq 0 ]; then
+            echo "demo-invalid passed the official suite; AUTH-017 was expected"
+            exit 1
+          fi
+          printf '%s\n' "$output" | grep -q 'AUTH-017'
