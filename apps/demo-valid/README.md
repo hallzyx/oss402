@@ -12,24 +12,31 @@ odysseyAuth({
 });
 ```
 
-Expected official certification: **PASS**.
+| Check | Result |
+| --- | --- |
+| Unit tests | PASS |
+| Official Odyssey Auth Conformance v1 | 30/30 PASS |
+| Maintainer attestation | Issued for this workspace, commit, and configuration hash |
+
+`oss402.yml` requires that certification before production. The paid run costs 0.05 USDC. The badge is not proof of payment. It is proof of PASS.
 
 ## OSS402 verification
 
-This badge is shown after an official **Odyssey Auth Conformance v1** run returns **30/30 PASS** and a maintainer attestation is issued (see [PRD §27](https://github.com/hallzyx/oss402/blob/main/docs/PRD.md#27-readme-badge)).
+Open the credential from the badge. With `pnpm dev:api` and `pnpm dev:dashboard`:
 
-| View | Local (with `pnpm dev:api` + `pnpm dev:dashboard`) |
+| View | URL |
 | --- | --- |
-| Credential landing (badge click) | http://localhost:3000/verify/`{attestationId}` or `/badge/{attestationId}` |
+| Credential | http://localhost:3000/verify/`{attestationId}` |
+| Badge alias | http://localhost:3000/badge/`{attestationId}` |
 | Attestation JSON | http://127.0.0.1:8787/api/attestations/`{attestationId}` |
 | Dynamic badge SVG | http://127.0.0.1:8787/api/badge/`{attestationId}`.svg |
 
-When the OSS402 API is on a public HTTPS host, use the same paths on that host so the badge renders on GitHub:
+The committed [`oss402-badge.svg`](./oss402-badge.svg) is a static preview so the README still shows a badge before the API is deployed. A public host uses the same paths:
 
 ```md
 [![Odyssey Auth Maintainer Conformant](https://YOUR_API/api/badge/att_XXX.svg)](https://YOUR_DASHBOARD/verify/att_XXX)
 ```
 
-Replace `att_XXX` with the id from your PASS run (`oss402_certification_status` / `GET /api/certifications/{runId}`).
+`att_XXX` comes from a PASS run (`oss402_certification_status` or `GET /api/certifications/{runId}`). FAIL never has an id to put here.
 
-The committed [`oss402-badge.svg`](./oss402-badge.svg) mirrors the API badge for README preview on GitHub before you deploy the API.
+How a run is purchased and how the subject is bound: [MCP and Agent Skill](../../docs/MCP_AND_AGENT_SKILL.md) and [Architecture](../../docs/ARCHITECTURE.md).

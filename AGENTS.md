@@ -28,6 +28,10 @@ Use the MCP server in `packages/oss402-mcp`:
 
 Follow `.agents/skills/oss402-certification/SKILL.md`.
 
+Pass `workspace` as `apps/demo-invalid` or `apps/demo-valid`. Pass `repository` as `github.com/hallzyx/oss402`.
+
+On PASS, print `http://localhost:3000/verify/{attestationId}` on its own line. On FAIL, do not invent a credential URL.
+
 ## Local commands
 
 ```bash
@@ -47,3 +51,7 @@ pnpm dev:mcp
 - `apps/demo-valid` → official PASS + attestation
 
 Do not edit source between those demos. The contrast is intentional.
+
+## Documentation
+
+Human-facing setup and payment docs are indexed from `README.md`. Start with `docs/GETTING_STARTED.md` and `docs/MCP_AND_AGENT_SKILL.md`.

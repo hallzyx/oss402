@@ -10,6 +10,8 @@
 **Payment Model:** Pay-per-certification-run  
 **Repository Strategy:** Single monorepo  
 
+Operational documentation lives under `docs/` and is indexed from the root README. This file remains the product specification. `docs/archive/PRD-v1.md` is the previous checkpoint.
+
 ---
 
 # 1. Executive Summary
@@ -335,8 +337,18 @@ oss402/
 │           └── SKILL.md
 │
 ├── demo/
-│   ├── DEMO_SCRIPT.md
 │   └── expected-results/
+│
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── GETTING_STARTED.md
+│   ├── CONFIGURATION.md
+│   ├── MCP_AND_AGENT_SKILL.md
+│   ├── X402_STELLAR.md
+│   ├── OPERATIONS.md
+│   ├── TESTING.md
+│   ├── SECURITY.md
+│   └── PRD.md
 │
 ├── AGENTS.md
 ├── README.md
@@ -1611,7 +1623,7 @@ Do not continue until this works.
 
 25. README badge
 26. maintainer dashboard
-27. `DEMO_SCRIPT.md`
+27. Documentation set under `docs/` (architecture, setup, x402, operations, testing, security)
 28. reproducibility commands
 29. screenshots/logging
 30. clean hackathon README
